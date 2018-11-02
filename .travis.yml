@@ -13,7 +13,7 @@ before_install:
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then chmod +x ./cc-test-reporter; fi'
   - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./cc-test-reporter before-build; fi'
 after_success:
-  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT -r 7e0ae7b133cfa94717b9cedd3067f1f97a461d998a8392307672fc4bd445c0e8; fi'
+  - 'if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT -r d379204c954f93f1e578df488f95337d50a7d9d86b3f6334ff00e22c8a55981b; fi'
 env:
   - CXX=g++-4.8
 addons:
