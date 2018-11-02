@@ -1,3 +1,10 @@
+/* jshint -W097 */
+/* jshint -W030 */
+/* jshint strict:true */
+/* jslint node: true */
+/* jslint esversion: 6 */
+'use strict';
+
 const mqtt = require('mqtt');
 const crypto = require('crypto');
 const request = require('request');
