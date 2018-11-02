@@ -89,7 +89,7 @@ class MerossCloud extends EventEmitter {
                 if (body.info === 'Success') {
                     return callback && callback(null, body.data);
                 }
-                return callback && callback(new Error(body.info));
+                return callback && callback(new Error(body.apiStatus + ': ' + body.info));
             }
             return callback && callback(error);
         });
