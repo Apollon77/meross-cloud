@@ -96,7 +96,6 @@ class MerossCloud extends EventEmitter {
     }
 
     connect(callback) {
-
         const data = {"email": this.options.email, "password": this.options.password};
 
         this.authenticatedPost(LOGIN_URL, data, (err, loginResponse) => {
@@ -136,7 +135,7 @@ class MerossCloud extends EventEmitter {
                     this.devices[dev.uuid].connect();
                 });
 
-                callback && callback(null);
+                callback && callback(null, deviceList.length);
             });
         });
 
@@ -157,6 +156,13 @@ class MerossCloud extends EventEmitter {
 
     getDevice(uuid) {
         return this.devices[uuid];
+    }
+
+    disconnectAll(force) {
+        for (const deviceId in this.devices) {
+            if (!this.devices.hasOwnProperty(deviceId)) continue;
+            this.devices[deviceId].disconnect(force);
+        }
     }
 }
 
@@ -250,6 +256,10 @@ class MerossCloudDevice extends EventEmitter {
         // mqtt.Client#reconnect()
     }
 
+    disconnect(force) {
+        this.client.end(force);
+    }
+
     publishMessage(method, namespace, payload, callback) {
         // if not subscribed und so ...
         const messageId = crypto.createHash('md5').update(generateRandomString(16)).digest("hex");
@@ -307,6 +317,9 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.System.Report", {}, callback);
     }
 
+    getOnlineStatus(callback) {
+        return this.publishMessage("GET", "Appliance.System.Online", {}, callback);
+    }
 
     getConfigWifiList(callback) {
         // {"wifiList":[]}

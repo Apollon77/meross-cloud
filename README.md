@@ -21,5 +21,8 @@ see example folder
 
 ## Changelog
 
+### 0.2.0
+* (Apollon77) implement all functionalities for adapter
+
 ### 0.1.0
 * (Apollon77) initial first release
