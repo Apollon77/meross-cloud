@@ -332,6 +332,10 @@ class MerossCloudDevice extends EventEmitter {
     }
 
 
+    getControlPowerConsumption(callback) {
+        return this.publishMessage("GET", "Appliance.Control.Consumption", {}, callback);
+    }
+
     getControlPowerConsumptionX(callback) {
         return this.publishMessage("GET", "Appliance.Control.ConsumptionX", {}, callback);
     }
@@ -340,8 +344,8 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.Control.Electricity", {}, callback);
     }
 
-    controlToggle(channel, onoff, callback) {
-        const payload = {"channel": channel, "toggle": {"onoff": onoff ? 1 : 0}};
+    controlToggle(onoff, callback) {
+        const payload = {"toggle": {"onoff": onoff ? 1 : 0}};
         return this.publishMessage("SET", "Appliance.Control.Toggle", payload, callback);
     }
 

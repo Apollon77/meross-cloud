@@ -21,6 +21,9 @@ see example folder
 
 ## Changelog
 
+### 0.3.0
+* (Apollon77) Add more functions for mss310 devices
+
 ### 0.2.0
 * (Apollon77) implement all functionalities for adapter
 
