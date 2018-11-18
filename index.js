@@ -131,6 +131,9 @@ class MerossCloud extends EventEmitter {
                     this.devices[dev.uuid].on('data', (namespace, payload) => {
                         this.emit('data', dev.uuid, namespace, payload);
                     });
+                    this.devices[dev.uuid].on('rawData', (message) => {
+                        this.emit('rawData', dev.uuid, message);
+                    });
                     this.emit('deviceInitialized', dev.uuid, dev, this.devices[dev.uuid]);
                     this.devices[dev.uuid].connect();
                 });
@@ -241,6 +244,7 @@ class MerossCloudDevice extends EventEmitter {
                 const namespace = message.header ? message.header.namespace : '';
                 this.emit('data', namespace, message.payload || message);
             }
+            this.emit('rawData', message);
         });
         this.client.on('error', (error) => {
             this.emit('error', error.toString());

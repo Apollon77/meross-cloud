@@ -21,6 +21,9 @@ see example folder
 
 ## Changelog
 
+### 0.3.1
+* (Apollon77) add rawData event to allow better debugging
+
 ### 0.3.0
 * (Apollon77) Add more functions for mss310 devices
 
