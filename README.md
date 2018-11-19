@@ -19,7 +19,13 @@ This library allows to login into Meross cloud server, read the registered devic
 
 see example folder
 
+## Todo
+* Experiment with multiple MQTT connections vs only one and maybe optimize
+
 ## Changelog
+
+### 0.3.2
+* (Apollon77) fix message handling and ignore messages posted by other devices
 
 ### 0.3.1
 * (Apollon77) add rawData event to allow better debugging
