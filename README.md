@@ -22,6 +22,9 @@ see example folder
 ## Todo
 * Experiment with multiple MQTT connections vs only one and maybe optimize
 
+## Credits
+The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
+
 ## Changelog
 
 ### 0.3.2
