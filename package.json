@@ -1,35 +1,35 @@
 {
-  "name": "meross-cloud",
-  "version": "0.3.2",
-  "description": "Control Meross cloud devices using nodejs",
-  "author": "Ingo Fischer <iobroker@fischer-ka.de>",
-  "contributors": [],
-  "homepage": "",
-  "license": "MIT",
-  "keywords": [
-    "Meross",
-    "WLAN cevices"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Apollon77/meross-cloud"
-  },
-  "dependencies": {
-    "mqtt": "^2.18.8",
-    "request": "^2.88.0"
-  },
-  "devDependencies": {
-    "mocha": "^5.0.0",
-    "chai": "^4.1.2",
-    "istanbul": "*",
-    "sinon": "^7.1.1",
-    "nock": "^10.0.1"
-  },
-  "bugs": {
-    "url": "https://github.com/Apollon77/meross-cloud/issues"
-  },
-  "main": "index.js",
-  "scripts": {
-    "test": "node node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec"
-  }
+    "name": "meross-cloud",
+    "version": "0.3.2",
+    "description": "Control Meross cloud devices using nodejs",
+    "author": "Ingo Fischer <iobroker@fischer-ka.de>",
+    "contributors": [],
+    "homepage": "",
+    "license": "MIT",
+    "keywords": [
+        "Meross",
+        "WLAN cevices"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Apollon77/meross-cloud"
+    },
+    "dependencies": {
+        "mqtt": "^2.18.8",
+        "request": "^2.88.0"
+    },
+    "devDependencies": {
+        "mocha": "^5.0.0",
+        "chai": "^4.1.2",
+        "istanbul": "*",
+        "sinon": "^7.1.1",
+        "nock": "^10.0.1"
+    },
+    "bugs": {
+        "url": "https://github.com/Apollon77/meross-cloud/issues"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "node node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec"
+    }
 }
