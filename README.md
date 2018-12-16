@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.0.0
+* move to 1.0.0
+
 ### 0.3.2
 * (Apollon77) fix message handling and ignore messages posted by other devices
 
