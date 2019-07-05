@@ -319,6 +319,30 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.System.Report", {}, callback);
     }
 
+    getSystemRuntime(callback) { // Wifi Strength
+        // "payload": {
+        // 		"runtime": {
+        // 			"signal": 86
+        // 		}
+        // 	}
+        return this.publishMessage("GET", "Appliance.System.Runtime", {}, callback);
+    }
+
+    getSystemDNDMode(callback) { // DND Mode (LED)
+        // "payload": {
+        // 		"DNDMode": {
+        // 			"mode": 0
+        // 		}
+        // 	}
+        return this.publishMessage("GET", "Appliance.System.DNDMode", {}, callback);
+    }
+
+    setSystemDNDMode(onoff, callback) {
+        const payload = {"DNDMode": {"mode": onoff ? 1 : 0}};
+        return this.publishMessage("SET", "Appliance.System.DNDMode", payload, callback);
+    }
+
+
     getOnlineStatus(callback) {
         return this.publishMessage("GET", "Appliance.System.Online", {}, callback);
     }

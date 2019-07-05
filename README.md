@@ -27,6 +27,10 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.2.0
+* add read/write DND-Mode (Device LED)
+* add read SystemRuntime (Wifi Strength)
+
 ### 1.1.0
 * add Light Support
 
