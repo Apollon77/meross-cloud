@@ -249,7 +249,7 @@ class MerossCloudDevice extends EventEmitter {
             this.emit('error', error.toString());
         });
         this.client.on('close', (error) => {
-            this.emit('close', error.toString());
+            this.emit('close', error ? error.toString() : null);
         });
         this.client.on('reconnect', () => {
             this.emit('reconnect');
