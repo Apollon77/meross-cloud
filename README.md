@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.1.0
+* add Light Support
+
 ### 1.0.0
 * move to 1.0.0
 

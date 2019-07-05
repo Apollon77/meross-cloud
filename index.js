@@ -356,6 +356,11 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.ToggleX", payload, callback);
     }
 
+    // {"light":{"capacity":6,"channel":0,"rgb":289,"temperature":80,"luminance":100}}
+    controlLight(light, callback) {
+        const payload = {"light": light};
+        return this.publishMessage("SET", "Appliance.Control.Light", payload, callback);
+    }
 }
 
 module.exports = MerossCloud;
