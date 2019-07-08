@@ -380,6 +380,11 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.ToggleX", payload, callback);
     }
 
+    controlGarageDoor(channel, open, callback) {
+        const payload = {"state": {"channel": channel, "open": open ? 1 : 0, "uuid": this.dev.uuid}};
+        return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
+    }
+
     // {"light":{"capacity":6,"channel":0,"rgb":289,"temperature":80,"luminance":100}}
     controlLight(light, callback) {
         const payload = {"light": light};
