@@ -294,6 +294,7 @@ class MerossCloudDevice extends EventEmitter {
                 delete this.waitingMessageIds[messageId];
             }, 20000);
         }
+        this.emit('rawSendData', data);
         return messageId;
     }
 

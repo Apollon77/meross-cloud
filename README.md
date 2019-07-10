@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.2.2 [WIP]
+* more fixes for garage door opener
+
 ### 1.2.1
 * try to fix garage door opener
 
