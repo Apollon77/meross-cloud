@@ -23,7 +23,7 @@
         "chai": "^4.2.0",
         "istanbul": "*",
         "sinon": "^7.3.2",
-        "nock": "^10.0.6"
+        "nock": "^11.1.0"
     },
     "bugs": {
         "url": "https://github.com/Apollon77/meross-cloud/issues"
