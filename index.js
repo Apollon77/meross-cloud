@@ -222,7 +222,8 @@ class MerossCloudDevice extends EventEmitter {
             'username': this.userId,
             'password': hashedPassword,
             'rejectUnauthorized': true,
-            'keepalive': 30
+            'keepalive': 30,
+            'reconnectPeriod': 5000
         });
 
         this.client.on('connect', () => {
