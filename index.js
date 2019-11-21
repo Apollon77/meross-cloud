@@ -10,10 +10,11 @@ const crypto = require('crypto');
 const request = require('request');
 const EventEmitter = require('events');
 
-const SECRET = "23x17ahWarFH6w29";
-const MEROSS_URL = "https://iot.meross.com";
-const LOGIN_URL = MEROSS_URL + "/v1/Auth/Login";
-const DEV_LIST = MEROSS_URL + "/v1/Device/devList";
+const SECRET = '23x17ahWarFH6w29';
+const MEROSS_URL = 'https://iot.meross.com';
+const LOGIN_URL = MEROSS_URL + '/v1/Auth/Login';
+const DEV_LIST = MEROSS_URL + '/v1/Device/devList';
+const SUBDEV_LIST = MEROSS_URL + '/v1/Hub/getSubDevices';
 
 function generateRandomString(length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -95,8 +96,36 @@ class MerossCloud extends EventEmitter {
         });
     }
 
+    connectDevice(deviceId, deviceObj, dev) {
+        this.devices[deviceId] = deviceObj;
+        this.devices[deviceId].on('connected', () => {
+            this.emit('connected', deviceId);
+        });
+        this.devices[deviceId].on('close', (error) => {
+            this.emit('close', deviceId, error);
+        });
+        this.devices[deviceId].on('error', (error) => {
+            if (!this.listenerCount('error')) return;
+            this.emit('error', deviceId, error);
+        });
+        this.devices[deviceId].on('reconnect', () => {
+            this.emit('reconnect', deviceId);
+        });
+        this.devices[deviceId].on('data', (namespace, payload) => {
+            this.emit('data', deviceId, namespace, payload);
+        });
+        this.devices[deviceId].on('rawData', (message) => {
+            this.emit('rawData', deviceId, message);
+        });
+        this.emit('deviceInitialized', deviceId, dev, this.devices[deviceId]);
+        this.devices[deviceId].connect();
+    }
+
     connect(callback) {
-        const data = {"email": this.options.email, "password": this.options.password};
+        const data = {
+            email: this.options.email,
+            password: this.options.password
+        };
 
         this.authenticatedPost(LOGIN_URL, data, (err, loginResponse) => {
             //console.log(loginResponse);
@@ -113,32 +142,24 @@ class MerossCloud extends EventEmitter {
             this.authenticatedPost(DEV_LIST, {}, (err, deviceList) => {
                 //console.log(JSON.stringify(deviceList, null, 2));
 
-                deviceList.forEach((dev) => {
-                    //const deviceType = dev.deviceType;
-                    this.devices[dev.uuid] = new MerossCloudDevice(this.token, this.key, this.userId, dev);
-                    this.devices[dev.uuid].on('connected', () => {
-                        this.emit('connected', dev.uuid);
+                let initCounter = 0;
+                if (deviceList && Array.isArray(deviceList)) {
+                    deviceList.forEach((dev) => {
+                        //const deviceType = dev.deviceType;
+                        if (dev.deviceType === 'msh300') {
+                            this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
+                                this.connectDevice(dev.uuid, new MerossCloudHubDevice(this.token, this.key, this.userId, dev, subDeviceList), dev);
+                                initCounter++;
+                                if (initCounter === deviceList.length) callback && callback(null, deviceList.length);
+                            });
+                        } else {
+                            this.connectDevice(dev.uuid, new MerossCloudDevice(this.token, this.key, this.userId, dev), dev);
+                            initCounter++;
+                        }
                     });
-                    this.devices[dev.uuid].on('close', (error) => {
-                        this.emit('close', dev.uuid, error);
-                    });
-                    this.devices[dev.uuid].on('error', (error) => {
-                        this.emit('error', dev.uuid, error);
-                    });
-                    this.devices[dev.uuid].on('reconnect', () => {
-                        this.emit('reconnect', dev.uuid);
-                    });
-                    this.devices[dev.uuid].on('data', (namespace, payload) => {
-                        this.emit('data', dev.uuid, namespace, payload);
-                    });
-                    this.devices[dev.uuid].on('rawData', (message) => {
-                        this.emit('rawData', dev.uuid, message);
-                    });
-                    this.emit('deviceInitialized', dev.uuid, dev, this.devices[dev.uuid]);
-                    this.devices[dev.uuid].connect();
-                });
+                }
 
-                callback && callback(null, deviceList.length);
+                if (initCounter === deviceList.length) callback && callback(null, deviceList.length);
             });
         });
 
@@ -358,7 +379,6 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.Config.Trace", {}, callback);
     }
 
-
     getControlPowerConsumption(callback) {
         return this.publishMessage("GET", "Appliance.Control.Consumption", {}, callback);
     }
@@ -381,6 +401,11 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.ToggleX", payload, callback);
     }
 
+    controlSpray(channel, mode, callback) {
+        const payload = {"spray": {"channel": channel, "mode": mode || 0}};
+        return this.publishMessage("SET", "Appliance.Control.Spray", payload, callback);
+    }
+
     controlGarageDoor(channel, open, callback) {
         const payload = {"state": {"channel": channel, "open": open ? 1 : 0, "uuid": this.dev.uuid}};
         return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
@@ -391,6 +416,44 @@ class MerossCloudDevice extends EventEmitter {
         const payload = {"light": light};
         return this.publishMessage("SET", "Appliance.Control.Light", payload, callback);
     }
+}
+
+
+class MerossCloudHubDevice extends MerossCloudDevice {
+
+    constructor(token, key, userId, dev, subDeviceList) {
+        super(token, key, userId, dev);
+
+        this.subDeviceList = subDeviceList;
+    }
+
+    getHubBattery(callback) {
+        const payload = {"battery": []};
+        return this.publishMessage("GET", "Appliance.Hub.Battery", payload, callback);
+    }
+
+    getMts100All(ids, callback) {
+        const payload = {"all": []};
+        ids.forEach(id => payload.all.push({id: id}));
+        return this.publishMessage("GET", "Appliance.Hub.Mts100.All", payload, callback);
+    }
+
+    controlHubToggleX(subId, onoff, callback) {
+        const payload = {"togglex": [{"id": subId, "onoff": onoff ? 1 : 0}]};
+        return this.publishMessage("SET", "Appliance.Hub.ToggleX", payload, callback);
+    }
+
+    controlHubMts100Mode(subId, mode, callback) {
+        const payload = {"mode": [{"id": subId, "state": mode}]};
+        return this.publishMessage("SET", "Appliance.Hub.Mts100.Mode", payload, callback);
+    }
+
+    controlHubMts100Temperature(subId, temp, callback) {
+        temp.id = subId;
+        const payload = {"temperature": [temp]};
+        return this.publishMessage("SET", "Appliance.Hub.Mts100.Temperature", payload, callback);
+    }
+
 }
 
 module.exports = MerossCloud;

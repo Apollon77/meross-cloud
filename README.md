@@ -29,6 +29,8 @@ The library is partially based on the Python project https://github.com/albertog
 
 ### 1.2.2 [WIP]
 * more fixes for garage door opener
+* reconnection fixes
+* support for hub devices
 
 ### 1.2.1
 * try to fix garage door opener
