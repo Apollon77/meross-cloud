@@ -19,11 +19,11 @@
         "request": "^2.88.0"
     },
     "devDependencies": {
-        "mocha": "^6.1.4",
+        "mocha": "^6.2.2",
         "chai": "^4.2.0",
         "istanbul": "*",
-        "sinon": "^7.3.2",
-        "nock": "^11.3.2"
+        "sinon": "^7.5.0",
+        "nock": "^11.7.0"
     },
     "bugs": {
         "url": "https://github.com/Apollon77/meross-cloud/issues"
