@@ -80,11 +80,11 @@ class MerossCloud extends EventEmitter {
             headers: headers,
             form: payload
         };
-        //console.log(options);
+        this.options.logger &&  this.options.logger('HTTP-Call: ' + JSON.stringify(options));
         // Perform the request.
         request(options, (error, response, body) => {
             if (!error && response.statusCode == 200) {
-                //console.log(body);
+                this.options.logger && this.options.logger('HTTP-Response OK: ' + body);
                 body = JSON.parse(body);
 
                 if (body.info === 'Success') {
@@ -92,6 +92,7 @@ class MerossCloud extends EventEmitter {
                 }
                 return callback && callback(new Error(body.apiStatus + ': ' + body.info));
             }
+            this.options.logger && this.options.logger('HTTP-Response Error: ' + error + ' / Status=' + response.statusCode);
             return callback && callback(error);
         });
     }
@@ -147,6 +148,7 @@ class MerossCloud extends EventEmitter {
                     deviceList.forEach((dev) => {
                         //const deviceType = dev.deviceType;
                         if (dev.deviceType === 'msh300') {
+                            this.options.logger && this.options.logger(dev.uuid + ' Detected Hub');
                             this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
                                 this.connectDevice(dev.uuid, new MerossCloudHubDevice(this.token, this.key, this.userId, dev, subDeviceList), dev);
                                 initCounter++;
