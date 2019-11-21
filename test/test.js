@@ -8,8 +8,6 @@
 var expect = require('chai').expect;
 var nock = require('nock');
 
-var DaikinACRequest = require('../index.js');
-
 describe('Test MerossCloud', function() {
 
     it('login', function (done) {
