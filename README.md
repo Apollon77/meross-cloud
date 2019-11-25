@@ -27,8 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
-### 1.2.2 [WIP]
+### 1.3.0
 * more fixes for garage door opener
+* better support lights
 * reconnection fixes
 * support for hub devices
 
