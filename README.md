@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.3.1 (2019-11-28)
+* handle error cases
+
 ### 1.3.0
 * more fixes for garage door opener
 * better support lights

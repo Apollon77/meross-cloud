@@ -249,6 +249,7 @@ class MerossCloudDevice extends EventEmitter {
         });
 
         this.client.on('message', (topic, message) => {
+            if (!message) return;
             // message is Buffer
             //console.log(topic + ' <-- ' + message.toString());
             message = JSON.parse(message.toString());
@@ -270,7 +271,7 @@ class MerossCloudDevice extends EventEmitter {
             this.emit('rawData', message);
         });
         this.client.on('error', (error) => {
-            this.emit('error', error.toString());
+            this.emit('error', error ? error.toString() : null);
         });
         this.client.on('close', (error) => {
             this.emit('close', error ? error.toString() : null);
