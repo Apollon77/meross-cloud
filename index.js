@@ -83,16 +83,21 @@ class MerossCloud extends EventEmitter {
         this.options.logger &&  this.options.logger('HTTP-Call: ' + JSON.stringify(options));
         // Perform the request.
         request(options, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
+            if (!error && response && response.statusCode == 200 && body) {
                 this.options.logger && this.options.logger('HTTP-Response OK: ' + body);
-                body = JSON.parse(body);
+                try {
+                    body = JSON.parse(body);
+                }
+                catch (err) {
+                    body = {};
+                }
 
                 if (body.info === 'Success') {
                     return callback && callback(null, body.data);
                 }
                 return callback && callback(new Error(body.apiStatus + ': ' + body.info));
             }
-            this.options.logger && this.options.logger('HTTP-Response Error: ' + error + ' / Status=' + response.statusCode);
+            this.options.logger && this.options.logger('HTTP-Response Error: ' + error + ' / Status=' + (response ? response.statusCode: '--'));
             return callback && callback(error);
         });
     }
