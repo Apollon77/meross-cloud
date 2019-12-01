@@ -149,7 +149,9 @@ class MerossCloud extends EventEmitter {
                 //console.log(JSON.stringify(deviceList, null, 2));
 
                 let initCounter = 0;
+                let deviceListLength = 0;
                 if (deviceList && Array.isArray(deviceList)) {
+                    deviceListLength = deviceList.length;
                     deviceList.forEach((dev) => {
                         //const deviceType = dev.deviceType;
                         if (dev.deviceType === 'msh300') {
@@ -157,7 +159,7 @@ class MerossCloud extends EventEmitter {
                             this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
                                 this.connectDevice(dev.uuid, new MerossCloudHubDevice(this.token, this.key, this.userId, dev, subDeviceList), dev);
                                 initCounter++;
-                                if (initCounter === deviceList.length) callback && callback(null, deviceList.length);
+                                if (initCounter === deviceListLength) callback && callback(null, deviceListLength);
                             });
                         } else {
                             this.connectDevice(dev.uuid, new MerossCloudDevice(this.token, this.key, this.userId, dev), dev);
@@ -166,7 +168,7 @@ class MerossCloud extends EventEmitter {
                     });
                 }
 
-                if (initCounter === deviceList.length) callback && callback(null, deviceList.length);
+                if (initCounter === deviceListLength) callback && callback(null, deviceListLength);
             });
         });
 

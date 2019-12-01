@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.3.3 (2019-12-01)
+* handle error cases
+
 ### 1.3.2 (2019-11-28)
 * handle error cases
 
