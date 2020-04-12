@@ -1,6 +1,6 @@
 {
     "name": "meross-cloud",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "description": "Control Meross cloud devices using nodejs",
     "author": "Ingo Fischer <iobroker@fischer-ka.de>",
     "contributors": [],
@@ -29,6 +29,7 @@
         "url": "https://github.com/Apollon77/meross-cloud/issues"
     },
     "main": "index.js",
+    "types": "index.d.ts",
     "scripts": {
         "test": "node node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- -R spec"
     }
