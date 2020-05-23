@@ -19,7 +19,7 @@
         "request": "^2.88.2"
     },
     "devDependencies": {
-        "mocha": "^7.1.1",
+        "mocha": "^7.2.0",
         "chai": "^4.2.0",
         "istanbul": "^0.4.5",
         "sinon": "^9.0.2",
