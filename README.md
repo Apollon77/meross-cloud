@@ -27,6 +27,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### 1.3.5 (2020-06-11)
+* update dependencies
+
 ### 1.3.4 (2020-04-12)
 * add typings (thanks to @colthreepv)
 * prevent some error cases
