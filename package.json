@@ -15,7 +15,7 @@
     "url": "https://github.com/Apollon77/meross-cloud"
   },
   "dependencies": {
-    "mqtt": "^4.1.0",
+    "mqtt": "^4.2.5",
     "request": "^2.88.2"
   },
   "devDependencies": {
@@ -24,7 +24,7 @@
     "chai": "^4.2.0",
     "istanbul": "^0.4.5",
     "sinon": "^9.2.1",
-    "nock": "^13.0.4"
+    "nock": "^13.0.5"
   },
   "bugs": {
     "url": "https://github.com/Apollon77/meross-cloud/issues"

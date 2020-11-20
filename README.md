@@ -1,6 +1,5 @@
 # meross-cloud
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/Apollon77/meross-cloud.svg)](https://greenkeeper.io/)
 [![NPM version](http://img.shields.io/npm/v/meross-cloud.svg)](https://www.npmjs.com/package/meross-cloud)
 [![Downloads](https://img.shields.io/npm/dm/meross-cloud.svg)](https://www.npmjs.com/package/meross-cloud)
 [![Code Climate](https://codeclimate.com/github/Apollon77/meross-cloud/badges/gpa.svg)](https://codeclimate.com/github/Apollon77/meross-cloud)
