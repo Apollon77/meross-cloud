@@ -26,6 +26,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### __WORK IN PROGRESS__
+* generate an unique uuid for each connection
+
 ### 1.3.5 (2020-06-11)
 * update dependencies
 

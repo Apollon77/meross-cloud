@@ -9,6 +9,7 @@ const mqtt = require('mqtt');
 const crypto = require('crypto');
 const request = require('request');
 const EventEmitter = require('events');
+const { v4: uuidv4 } = require('uuid');
 
 const SECRET = '23x17ahWarFH6w29';
 const MEROSS_URL = 'https://iot.meross.com';
@@ -219,7 +220,7 @@ class MerossCloudDevice extends EventEmitter {
 
     connect() {
         const domain = this.dev.domain || "eu-iot.meross.com";
-        const appId = crypto.createHash('md5').update('API' + this.dev.uuid).digest("hex");
+        const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
         const clientId = 'app:' + appId;
 
         // Password is calculated as the MD5 of USERID concatenated with KEY
