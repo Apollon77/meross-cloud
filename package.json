@@ -17,7 +17,7 @@
   "dependencies": {
     "mqtt": "^4.2.6",
     "request": "^2.88.2",
-    "uuid": "^8.3.1"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@alcalzone/release-script": "^1.8.1",
