@@ -437,6 +437,17 @@ class MerossCloudDevice extends EventEmitter {
         const payload = {"light": light};
         return this.publishMessage("SET", "Appliance.Control.Light", payload, callback);
     }
+
+    controlDiffusorSpray(type, channel, mode, callback) {
+        const payload = {"type": type, "spray": {"channel": channel, "mode": mode || 0}};
+        return this.publishMessage("SET", "Appliance.Control.Diffuser.Spray", payload, callback);
+    }
+
+    controlDiffusorLight(type, light, callback) {
+        const payload = {"type": type, "light": light};
+        return this.publishMessage("SET", "Appliance.Control.Diffuser.Light", payload, callback);
+    }
+
 }
 
 
