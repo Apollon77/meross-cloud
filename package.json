@@ -17,15 +17,15 @@
   "dependencies": {
     "mqtt": "^4.2.6",
     "request": "^2.88.2",
-    "uuid": "^8.3.1"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@alcalzone/release-script": "^1.8.1",
-    "mocha": "^8.2.1",
-    "chai": "^4.2.0",
+    "@alcalzone/release-script": "^1.8.3",
+    "mocha": "^8.3.2",
+    "chai": "^4.3.4",
     "istanbul": "^0.4.5",
-    "sinon": "^9.2.1",
-    "nock": "^13.0.5"
+    "sinon": "^9.2.4",
+    "nock": "^13.0.11"
   },
   "bugs": {
     "url": "https://github.com/Apollon77/meross-cloud/issues"
