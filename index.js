@@ -439,13 +439,13 @@ class MerossCloudDevice extends EventEmitter {
     }
 
     controlDiffusorSpray(type, channel, mode, callback) {
-        const payload = {"spray": {"channel": channel, "mode": mode || 0, "uuid": this.dev.uuid}};
+        const payload = {"spray": [{"channel": channel, "mode": mode || 0, "uuid": this.dev.uuid}]};
         return this.publishMessage("SET", "Appliance.Control.Diffuser.Spray", payload, callback);
     }
 
     controlDiffusorLight(type, light, callback) {
         light.uuid = this.dev.uuid;
-        const payload = {"light": light};
+        const payload = {"light": [light]};
         return this.publishMessage("SET", "Appliance.Control.Diffuser.Light", payload, callback);
     }
 
