@@ -26,7 +26,7 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
-### __WORK IN PROGRESS__
+### 1.4.0 (2021-04-18)
 * add MOD100 Diffuser Spray device
 
 ### 1.3.6 (2020-12-05)
