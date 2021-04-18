@@ -26,6 +26,9 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### __WORK IN PROGRESS__
+* add MOD100 Diffuser Spray device
+
 ### 1.3.6 (2020-12-05)
 * generate an unique uuid for each connection, fixes the "Server not available"
 
