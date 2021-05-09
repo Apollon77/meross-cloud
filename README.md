@@ -1,10 +1,9 @@
 # meross-cloud
 
 
-[![NPM version](http://img.shields.io/npm/v/iobroker.meross.svg)](https://www.npmjs.com/package/meross-cloud)
+[![NPM version](http://img.shields.io/npm/v/meross-cloud.svg)](https://www.npmjs.com/package/meross-cloud)
 [![Downloads](https://img.shields.io/npm/dm/meross-cloud.svg)](https://www.npmjs.com/package/meross-cloud)
 ![Test and Release](https://github.com/Apollon77/meross-cloud/workflows/Test%20and%20Release/badge.svg)
-[![Code Climate](https://codeclimate.com/github/Apollon77/meross-cloud/badges/gpa.svg)](https://codeclimate.com/github/Apollon77/meross-cloud)
 
 This library allows to login into Meross cloud server, read the registered devices and open connections to the MQTT cloud server to get the datatosign
 
