@@ -427,6 +427,26 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.Spray", payload, callback);
     }
 
+    /**
+     *
+     * @param channel
+     * @param state 0=pause, 1=up, 2=down
+     * @param callback
+     * @return {string}
+     */
+    controlRollerShutter(channel, state, callback) {
+        const payload = {"state": [{"state": state, "channel": channel}]};
+        return this.publishMessage("SET", "Appliance.RollerShutter.State", payload, callback);
+    }
+
+    getRollerShutterState(callback) {
+        return this.publishMessage("GET", "Appliance.RollerShutter.State", {}, callback);
+    }
+
+    getRollerShutterPosition(callback) {
+        return this.publishMessage("GET", "Appliance.RollerShutter.Position", {}, callback);
+    }
+
     controlGarageDoor(channel, open, callback) {
         const payload = {"state": {"channel": channel, "open": open ? 1 : 0, "uuid": this.dev.uuid}};
         return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
