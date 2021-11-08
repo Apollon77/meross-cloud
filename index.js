@@ -159,7 +159,7 @@ class MerossCloud extends EventEmitter {
                     deviceListLength = deviceList.length;
                     deviceList.forEach((dev) => {
                         //const deviceType = dev.deviceType;
-                        if (dev.deviceType === 'msh300') {
+                        if (dev.deviceType.startsWith('msh300')) {
                             this.options.logger && this.options.logger(dev.uuid + ' Detected Hub');
                             this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
                                 this.connectDevice(dev.uuid, new MerossCloudHubDevice(this.token, this.key, this.userId, dev, subDeviceList), dev);
