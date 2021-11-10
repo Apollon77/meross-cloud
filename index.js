@@ -438,10 +438,10 @@ class MerossCloudDevice extends EventEmitter {
         let posToSend;
         switch (state) {
             case 1:
-                posToSend = 0;
+                posToSend = 100;
                 break;
             case 2:
-                posToSend = 100;
+                posToSend = 0;
                 break;
             default:
                 posToSend = -1;
