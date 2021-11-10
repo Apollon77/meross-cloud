@@ -427,26 +427,18 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.Spray", payload, callback);
     }
 
-    /**
-     *
-     * @param channel
-     * @param state 0=pause, 1=up, 2=down
-     * @param callback
-     * @return {string}
-     */
-    controlRollerShutter(channel, state, callback) {
-        let posToSend;
-        switch (state) {
-            case 1:
-                posToSend = 100;
-                break;
-            case 2:
-                posToSend = 0;
-                break;
-            default:
-                posToSend = -1;
-        }
-        const payload = {"position": {"position": posToSend, "channel": channel}};
+    controlRollerShutterUp(channel, callback) {
+        const payload = {"position": {"position": 100, "channel": channel}};
+        return this.publishMessage("SET", "Appliance.RollerShutter.Position", payload, callback);
+    }
+
+    controlRollerShutterDown(channel, callback) {
+        const payload = {"position": {"position": 0, "channel": channel}};
+        return this.publishMessage("SET", "Appliance.RollerShutter.Position", payload, callback);
+    }
+
+    controlRollerShutterStop(channel, callback) {
+        const payload = {"position": {"position": -1, "channel": channel}};
         return this.publishMessage("SET", "Appliance.RollerShutter.Position", payload, callback);
     }
 
