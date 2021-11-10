@@ -444,7 +444,7 @@ class MerossCloudDevice extends EventEmitter {
                 posToSend = 0;
                 break;
             default:
-                posToSend = 50;
+                posToSend = -1;
         }
         const payload = {"position": {"position": posToSend, "channel": channel}};
         return this.publishMessage("SET", "Appliance.RollerShutter.Position", payload, callback);
