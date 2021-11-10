@@ -435,7 +435,7 @@ class MerossCloudDevice extends EventEmitter {
      * @return {string}
      */
     controlRollerShutter(channel, state, callback) {
-        const payload = {"state": {"state": state, "channel": channel}};
+        const payload = {"state": {"state": state, "channel": channel, "uuid": this.dev.uuid}};
         return this.publishMessage("SET", "Appliance.RollerShutter.State", payload, callback);
     }
 
