@@ -19,6 +19,11 @@ The library is partially based on the Python project https://github.com/albertog
 
 ## Changelog
 
+### __WORK IN PROGRESS__
+* Add support for MTS150 Thermostats
+* Add support for MRS100 RollerShutter devices
+* update typescript definitions
+
 ### 1.4.0 (2021-04-18)
 * add MOD100 Diffuser Spray device
 
