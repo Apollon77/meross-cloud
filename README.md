@@ -18,6 +18,9 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+### __WORK IN PROGRESS__
+* (Apollon77) Add support for MTS200 Wifi Thermostat
+
 ### 1.5.0 (2021-11-13)
 * Add support for MTS150 Thermostats
 * Add support for MRS100 RollerShutter devices

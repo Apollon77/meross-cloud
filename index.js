@@ -472,6 +472,12 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("SET", "Appliance.Control.Diffuser.Light", payload, callback);
     }
 
+    controlThermostatMode(channel, modeData, callback) {
+        modeData.channel = channel;
+        const payload = {"mode": [modeData]};
+        return this.publishMessage("SET", "Appliance.Control.Thermostat.Mode", payload, callback);
+    }
+
 }
 
 
