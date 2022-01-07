@@ -37,6 +37,7 @@ class MerossCloud extends EventEmitter {
     /*
         email
         password
+        localHttpFirst
     */
 
     constructor(options) {
@@ -48,6 +49,8 @@ class MerossCloud extends EventEmitter {
         this.userId = null;
         this.userEmail = null;
         this.authenticated = false;
+
+        this.localHttpFirst = options.localHttpFirst;
 
         this.mqttConnections = {};
         this.devices = {};
@@ -315,8 +318,41 @@ class MerossCloud extends EventEmitter {
         }
     }
 
-    sendMessage(dev, method, namespace, payload) {
-        // if not subscribed und so ...
+    sendMessageMqtt(dev, data) {
+        if (!this.mqttConnections[dev.domain] || ! this.mqttConnections[dev.domain].client) {
+            return false;
+        }
+
+        this.mqttConnections[dev.domain].client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
+        return true;
+    }
+
+    sendMessageHttp(dev, ip, payload, callback) {
+        const options = {
+            url: `http://${ip}/config`,
+            method: 'POST',
+            json: payload,
+            timeout: 3000,
+        };
+        this.options.logger &&  this.options.logger('HTTP-Local-Call: ' + JSON.stringify(options));
+        // Perform the request.
+        request(options, (error, response, body) => {
+            if (!error && response && response.statusCode === 200 && body) {
+                this.options.logger && this.options.logger('HTTP-Local-Response OK: ' + JSON.stringify(body));
+                if (body) {
+                    setImmediate(() => {
+                        this.devices[dev.uuid].handleMessage(body);
+                    })
+                    return callback && callback(null);
+                }
+                return callback && callback(new Error(body.apiStatus + ': ' + body.info));
+            }
+            this.options.logger && this.options.logger('HTTP-Local-Response Error: ' + error + ' / Status=' + (response ? response.statusCode: '--'));
+            return callback && callback(error);
+        });
+    }
+
+    encodeMessage(method, namespace, payload) {
         const messageId = crypto.createHash('md5').update(generateRandomString(16)).digest("hex");
         const timestamp = Math.round(new Date().getTime() / 1000);  //int(round(time.time()))
 
@@ -334,12 +370,21 @@ class MerossCloud extends EventEmitter {
             },
             "payload": payload
         };
-
-        if (!this.mqttConnections[dev.domain] || ! this.mqttConnections[dev.domain].client) {
-            return null;
-        }
-        this.mqttConnections[dev.domain].client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
         return data;
+    }
+
+    sendMessage(dev, ip, data, callback) {
+        if (this.localHttpFirst && ip) {
+            this.sendMessageHttp(dev, ip, data, err => {
+                let res = !err;
+                if (err) {
+                    res = this.sendMessageMqtt(dev, data);
+                }
+                callback && callback(res);
+            })
+        } else {
+            callback && callback(this.sendMessageMqtt(dev, data));
+        }
     }
 }
 
@@ -391,24 +436,30 @@ class MerossCloudDevice extends EventEmitter {
         this.deviceConnected = false;
     }
 
+    setKnownInnerIp(ip) {
+        this.knownInnerIp = ip;
+    }
+
     publishMessage(method, namespace, payload, callback) {
-        const data = this.cloudInst.sendMessage(this.dev, method, namespace, payload);
-        if (!data) {
-            return callback && callback(new Error('Device has no data connection initialized'));
-        }
+        const data = this.cloudInst.encodeMessage(method, namespace, payload);
         const messageId = data.header.messageId;
-        if (callback) {
-            this.waitingMessageIds[messageId] = {};
-            this.waitingMessageIds[messageId].callback = callback;
-            this.waitingMessageIds[messageId].timeout = setTimeout(() => {
-                //console.log('TIMEOUT');
-                if (this.waitingMessageIds[messageId].callback) {
-                    this.waitingMessageIds[messageId].callback(new Error('Timeout'));
-                }
-                delete this.waitingMessageIds[messageId];
-            }, 20000);
-        }
-        this.emit('rawSendData', data);
+        this.cloudInst.sendMessage(this.dev, this.knownInnerIp, data, res => {
+            if (!res) {
+                return callback && callback(new Error('Device has no data connection available'));
+            }
+            if (callback) {
+                this.waitingMessageIds[messageId] = {};
+                this.waitingMessageIds[messageId].callback = callback;
+                this.waitingMessageIds[messageId].timeout = setTimeout(() => {
+                    //console.log('TIMEOUT');
+                    if (this.waitingMessageIds[messageId].callback) {
+                        this.waitingMessageIds[messageId].callback(new Error('Timeout'));
+                    }
+                    delete this.waitingMessageIds[messageId];
+                }, 20000);
+            }
+            this.emit('rawSendData', data);
+        });
         return messageId;
     }
 

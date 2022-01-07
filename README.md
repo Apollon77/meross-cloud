@@ -21,6 +21,7 @@ The library is partially based on the Python project https://github.com/albertog
 
 ### __WORK IN PROGRESS__
 * (Apollon77) Restructure library so that only one MQTT connection is used: Effect ist that the "connect()" and "disconnect()" methods are only activating or deactivating if messages are emitted/answered or not!
+* (Apollon77) Add option to the library to try to communicate to the device locally using HTTP if the IP is known (or retrieved using getSystemAllData). If a call is not answered via HTTP within 3s the value is sent via MQTT
 
 ### 1.6.0 (2022-01-05)
 * (Apollon77) Add support for MTS200 Wifi Thermostat
