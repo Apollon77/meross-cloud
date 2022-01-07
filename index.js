@@ -133,6 +133,12 @@ class MerossCloud extends EventEmitter {
     }
 
     connect(callback) {
+        if (!this.options.email) {
+            return callback && callback(new Error('Email missing'));
+        }
+        if (!this.options.password) {
+            return callback && callback(new Error('Password missing'));
+        }
         const data = {
             email: this.options.email,
             password: this.options.password
@@ -209,7 +215,7 @@ class MerossCloud extends EventEmitter {
     }
 
     initMqtt(dev) {
-        const domain = dev.domain || "eu-iot.meross.com";
+        const domain = dev.domain || "eu-iot.meross.com"; // reservedDomain ???
         if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client || !this.mqttConnections[domain].client.connected || !this.mqttConnections[domain].client.reconnecting) {
             const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
             const clientId = 'app:' + appId;
@@ -325,7 +331,7 @@ class MerossCloud extends EventEmitter {
             "payload": payload
         };
 
-        for (const conn in this.mqttConnections) {
+        for (const conn of Object.entries(this.mqttConnections)) {
             if (conn.deviceList.find(_devId => dev.uuid === _devId)) {
                 conn.client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
                 break;
