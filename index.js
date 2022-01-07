@@ -209,21 +209,23 @@ class MerossCloud extends EventEmitter {
             if (!this.devices.hasOwnProperty(deviceId)) continue;
             this.devices[deviceId].disconnect(force);
         }
-        for (const conn in this.mqttConnections) {
-            conn.client.end(force);
+        for (const domain of Object.keys(this.mqttConnections)) {
+            this.mqttConnections[domain].client.end(force);
         }
     }
 
     initMqtt(dev) {
         const domain = dev.domain || "eu-iot.meross.com"; // reservedDomain ???
-        if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client || !this.mqttConnections[domain].client.connected || !this.mqttConnections[domain].client.reconnecting) {
+        if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client) {
             const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
             const clientId = 'app:' + appId;
 
             // Password is calculated as the MD5 of USERID concatenated with KEY
             const hashedPassword = crypto.createHash('md5').update(this.userId + this.key).digest("hex");
 
-            this.mqttConnections[domain] = this.mqttConnections[domain] || {}
+            if (!this.mqttConnections[domain]) {
+                this.mqttConnections[domain] = {};
+            }
             if (this.mqttConnections[domain].client) {
                 this.mqttConnections[domain].client.end(true);
             }
@@ -294,9 +296,11 @@ class MerossCloud extends EventEmitter {
                     return;
                 }
 
-                this.mqttConnections[domain].deviceList.forEach(devId => {
-                    this.devices[devId].handleMessage(message);
-                });
+                if (!message.header.from) return;
+                const fromArr = message.header.from.split('/');
+                if (this.devices[fromArr[2]]) {
+                    this.devices[fromArr[2]].handleMessage(message);
+                }
             });
 
         } else {
@@ -331,13 +335,11 @@ class MerossCloud extends EventEmitter {
             "payload": payload
         };
 
-        for (const conn of Object.entries(this.mqttConnections)) {
-            if (conn.deviceList.find(_devId => dev.uuid === _devId)) {
-                conn.client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
-                break;
-            }
+        if (!this.mqttConnections[dev.domain] || ! this.mqttConnections[dev.domain].client) {
+            return null;
         }
-        return messageId;
+        this.mqttConnections[dev.domain].client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
+        return data;
     }
 }
 
@@ -390,7 +392,11 @@ class MerossCloudDevice extends EventEmitter {
     }
 
     publishMessage(method, namespace, payload, callback) {
-        const messageId = this.cloudInst.sendMessage(this.dev, method, namespace, payload);
+        const data = this.cloudInst.sendMessage(this.dev, method, namespace, payload);
+        if (!data) {
+            return callback && callback(new Error('Device has no data connection initialized'));
+        }
+        const messageId = data.header.messageId;
         if (callback) {
             this.waitingMessageIds[messageId] = {};
             this.waitingMessageIds[messageId].callback = callback;
