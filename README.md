@@ -18,6 +18,10 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Restructure library so that only one MQTT connection is used: Effect ist that the "connect()" and "disconnect()" methods are only activating or deactivating if messages are emitted/answered or not!
+
 ### 1.6.0 (2022-01-05)
 * (Apollon77) Add support for MTS200 Wifi Thermostat
 

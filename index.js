@@ -49,6 +49,7 @@ class MerossCloud extends EventEmitter {
         this.userEmail = null;
         this.authenticated = false;
 
+        this.mqttConnections = {};
         this.devices = {};
     }
 
@@ -84,7 +85,7 @@ class MerossCloud extends EventEmitter {
         this.options.logger &&  this.options.logger('HTTP-Call: ' + JSON.stringify(options));
         // Perform the request.
         request(options, (error, response, body) => {
-            if (!error && response && response.statusCode == 200 && body) {
+            if (!error && response && response.statusCode === 200 && body) {
                 this.options.logger && this.options.logger('HTTP-Response OK: ' + body);
                 try {
                     body = JSON.parse(body);
@@ -103,7 +104,8 @@ class MerossCloud extends EventEmitter {
         });
     }
 
-    connectDevice(deviceId, deviceObj, dev) {
+    connectDevice(deviceObj, dev) {
+        const deviceId = dev.uuid;
         this.devices[deviceId] = deviceObj;
         this.devices[deviceId].on('connected', () => {
             this.emit('connected', deviceId);
@@ -125,6 +127,8 @@ class MerossCloud extends EventEmitter {
             this.emit('rawData', deviceId, message);
         });
         this.emit('deviceInitialized', deviceId, dev, this.devices[deviceId]);
+
+        this.initMqtt(dev);
         this.devices[deviceId].connect();
     }
 
@@ -162,12 +166,12 @@ class MerossCloud extends EventEmitter {
                         if (dev.deviceType.startsWith('msh300')) {
                             this.options.logger && this.options.logger(dev.uuid + ' Detected Hub');
                             this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
-                                this.connectDevice(dev.uuid, new MerossCloudHubDevice(this.token, this.key, this.userId, dev, subDeviceList), dev);
+                                this.connectDevice(new MerossCloudHubDevice(this, dev, subDeviceList), dev);
                                 initCounter++;
                                 if (initCounter === deviceListLength) callback && callback(null, deviceListLength);
                             });
                         } else {
-                            this.connectDevice(dev.uuid, new MerossCloudDevice(this.token, this.key, this.userId, dev), dev);
+                            this.connectDevice(new MerossCloudDevice(this, dev), dev);
                             initCounter++;
                         }
                     });
@@ -177,9 +181,7 @@ class MerossCloud extends EventEmitter {
             });
         });
 
-
         /*
-
         /app/64416/subscribe <-- {"header":{"messageId":"b5da1e168cba7a681afcff82eaf703c8","namespace":"Appliance.System.Online","timestamp":1539614195,"method":"PUSH","sign":"b16c2c4cbb5acf13e6b94990abf5b140","from":"/appliance/1806299596727829081434298f15a991/subscribe","payloadVersion":1},"payload":{"online":{"status":2}}}
         /app/64416/subscribe <-- {"header":{"messageId":"4bf5dfaaa0898243a846c1f2a93970fe","namespace":"Appliance.System.Online","timestamp":1539614201,"method":"PUSH","sign":"f979692120e7165b2116abdfd464ca83","from":"/appliance/1806299596727829081434298f15a991/subscribe","payloadVersion":1},"payload":{"online":{"status":1}}}
         /app/64416/subscribe <-- {"header":{"messageId":"46182b62a9377a8cc0147f22262a23f3","namespace":"Appliance.System.Report","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539614201,"timestampMs":78,"sign":"048fad34ca4d00875a026e33b16caf1b"},"payload":{"report":[{"type":"1","value":"0","timestamp":1539614201}]}}
@@ -201,111 +203,109 @@ class MerossCloud extends EventEmitter {
             if (!this.devices.hasOwnProperty(deviceId)) continue;
             this.devices[deviceId].disconnect(force);
         }
-    }
-}
-
-class MerossCloudDevice extends EventEmitter {
-
-    constructor(token, key, userId, dev) {
-        super();
-
-        this.clientResponseTopic = null;
-        this.waitingMessageIds = {};
-
-        this.token = token;
-        this.key = key;
-        this.userId = userId;
-        this.dev = dev;
+        for (const conn in this.mqttConnections) {
+            conn.client.end(force);
+        }
     }
 
-    connect() {
-        const domain = this.dev.domain || "eu-iot.meross.com";
-        const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
-        const clientId = 'app:' + appId;
+    initMqtt(dev) {
+        const domain = dev.domain || "eu-iot.meross.com";
+        if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client || !this.mqttConnections[domain].client.connected || !this.mqttConnections[domain].client.reconnecting) {
+            const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
+            const clientId = 'app:' + appId;
 
-        // Password is calculated as the MD5 of USERID concatenated with KEY
-        const hashedPassword = crypto.createHash('md5').update(this.userId + this.key).digest("hex");
+            // Password is calculated as the MD5 of USERID concatenated with KEY
+            const hashedPassword = crypto.createHash('md5').update(this.userId + this.key).digest("hex");
 
-        this.client  = mqtt.connect({
-            'protocol': 'mqtts',
-            'host': domain,
-            'port': 2001,
-            'clientId': clientId,
-            'username': this.userId,
-            'password': hashedPassword,
-            'rejectUnauthorized': true,
-            'keepalive': 30,
-            'reconnectPeriod': 5000
-        });
+            this.mqttConnections[domain] = this.mqttConnections[domain] || {}
+            if (this.mqttConnections[domain].client) {
+                this.mqttConnections[domain].client.end(true);
+            }
+            this.mqttConnections[domain].client = mqtt.connect({
+                'protocol': 'mqtts',
+                'host': domain,
+                'port': 2001,
+                'clientId': clientId,
+                'username': this.userId,
+                'password': hashedPassword,
+                'rejectUnauthorized': true,
+                'keepalive': 30,
+                'reconnectPeriod': 5000
+            });
+            this.mqttConnections[domain].deviceList = this.mqttConnections[domain].deviceList || [];
+            if (!this.mqttConnections[domain].deviceList.includes(dev.uuid)) {
+                this.mqttConnections[domain].deviceList.push(dev.uuid);
+            }
 
-        this.client.on('connect', () => {
+            this.mqttConnections[domain].client.on('connect', () => {
+                //console.log("Connected. Subscribe to user topics");
 
-            //console.log("Connected. Subscribe to user topics");
+                this.mqttConnections[domain].client.subscribe('/app/' + this.userId + '/subscribe', (err) => {
+                    if (err) {
+                        this.emit('error', err);
+                    }
+                    //console.log('User Subscribe Done');
+                });
 
-            this.client.subscribe('/app/' + this.userId + '/subscribe', (err) => {
-                if (err) {
-                    this.emit('error', err);
-                }
-                //console.log('User Subscribe Done');
+                this.clientResponseTopic = '/app/' + this.userId + '-' + appId + '/subscribe';
+
+                this.mqttConnections[domain].client.subscribe(this.clientResponseTopic, (err) => {
+                    if (err) {
+                        this.emit('error', err);
+                    }
+                    //console.log('User Response Subscribe Done');
+                });
+
+                this.mqttConnections[domain].deviceList.forEach(devId => {
+                    this.devices[devId].emit('connected');
+                });
             });
 
-            this.clientResponseTopic = '/app/' + this.userId + '-' + appId + '/subscribe';
-
-            this.client.subscribe(this.clientResponseTopic, (err) => {
-                if (err) {
-                    this.emit('error', err);
-                }
-                //console.log('User Response Subscribe Done');
+            this.mqttConnections[domain].client.on('error', (error) => {
+                this.mqttConnections[domain].deviceList.forEach(devId => {
+                   this.devices[devId].emit('error', error ? error.toString() : null);
+                });
             });
-            this.emit('connected');
-        });
+            this.mqttConnections[domain].client.on('close', (error) => {
+                this.mqttConnections[domain].deviceList.forEach(devId => {
+                    this.devices[devId].emit('close', error ? error.toString() : null);
+                });
+            });
+            this.mqttConnections[domain].client.on('reconnect', () => {
+                this.mqttConnections[domain].deviceList.forEach(devId => {
+                    this.devices[devId].emit('reconnect');
+                });
+            });
 
-        this.client.on('message', (topic, message) => {
-            if (!message) return;
-            // message is Buffer
-            //console.log(topic + ' <-- ' + message.toString());
-            try {
-                message = JSON.parse(message.toString());
-            } catch (err) {
-                this.emit('error', 'JSON parse error: ' + err);
-                return;
-            }
-            if (message.header.from && !message.header.from.includes(this.dev.uuid)) return;
-            // {"header":{"messageId":"14b4951d0627ea904dd8685c480b7b2e","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539602435,"timestampMs":427,"sign":"f33bb034ac2d5d39289e6fa3dcead081"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539602434},{"channel":1,"onoff":0,"lmTime":1539602434},{"channel":2,"onoff":0,"lmTime":1539602434},{"channel":3,"onoff":0,"lmTime":1539602434},{"channel":4,"onoff":0,"lmTime":1539602434}]}}
-
-            // If the message is the RESP for some previous action, process return the control to the "stopped" method.
-            if (this.waitingMessageIds[message.header.messageId]) {
-                if (this.waitingMessageIds[message.header.messageId].timeout) {
-                    clearTimeout(this.waitingMessageIds[message.header.messageId].timeout);
+            this.mqttConnections[domain].client.on('message', (topic, message) => {
+                if (!message) return;
+                // message is Buffer
+                //console.log(topic + ' <-- ' + message.toString());
+                try {
+                    message = JSON.parse(message.toString());
+                } catch (err) {
+                    this.emit('error', 'JSON parse error: ' + err);
+                    return;
                 }
-                this.waitingMessageIds[message.header.messageId].callback(null, message.payload || message);
-                delete this.waitingMessageIds[message.header.messageId];
-            }
-            else if (message.header.method === "PUSH") { // Otherwise process it accordingly
-                const namespace = message.header ? message.header.namespace : '';
-                this.emit('data', namespace, message.payload || message);
-            }
-            this.emit('rawData', message);
-        });
-        this.client.on('error', (error) => {
-            this.emit('error', error ? error.toString() : null);
-        });
-        this.client.on('close', (error) => {
-            this.emit('close', error ? error.toString() : null);
-        });
-        this.client.on('reconnect', () => {
-            this.emit('reconnect');
-        });
 
-        // mqtt.Client#end([force], [options], [cb])
-        // mqtt.Client#reconnect()
+                this.mqttConnections[domain].deviceList.forEach(devId => {
+                    this.devices[devId].handleMessage(message);
+                });
+            });
+
+        } else {
+            if (!this.mqttConnections[domain].deviceList.includes(dev.uuid)) {
+                this.mqttConnections[domain].deviceList.push(dev.uuid);
+            }
+            if (this.mqttConnections[domain].client.connected) {
+                setImmediate(() => {
+                    this.devices[dev].emit('connected');
+                });
+            }
+        }
     }
 
-    disconnect(force) {
-        this.client.end(force);
-    }
-
-    publishMessage(method, namespace, payload, callback) {
+    sendMessage(dev, method, namespace, payload) {
         // if not subscribed und so ...
         const messageId = crypto.createHash('md5').update(generateRandomString(16)).digest("hex");
         const timestamp = Math.round(new Date().getTime() / 1000);  //int(round(time.time()))
@@ -324,7 +324,67 @@ class MerossCloudDevice extends EventEmitter {
             },
             "payload": payload
         };
-        this.client.publish('/appliance/' + this.dev.uuid + '/subscribe', JSON.stringify(data));
+
+        for (const conn in this.mqttConnections) {
+            if (conn.deviceList.find(_devId => dev.uuid === _devId)) {
+                conn.client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
+                break;
+            }
+        }
+        return messageId;
+    }
+}
+
+class MerossCloudDevice extends EventEmitter {
+
+    constructor(cloudInstance, dev) {
+        super();
+
+        this.clientResponseTopic = null;
+        this.waitingMessageIds = {};
+
+        this.dev = dev;
+        this.cloudInst = cloudInstance;
+
+        this.deviceConnected = false;
+    }
+
+    handleMessage(message) {
+        if (!this.deviceConnected) return;
+        if (message.header.from && !message.header.from.includes(this.dev.uuid)) return;
+        // {"header":{"messageId":"14b4951d0627ea904dd8685c480b7b2e","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539602435,"timestampMs":427,"sign":"f33bb034ac2d5d39289e6fa3dcead081"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539602434},{"channel":1,"onoff":0,"lmTime":1539602434},{"channel":2,"onoff":0,"lmTime":1539602434},{"channel":3,"onoff":0,"lmTime":1539602434},{"channel":4,"onoff":0,"lmTime":1539602434}]}}
+
+        // If the message is the RESP for some previous action, process return the control to the "stopped" method.
+        if (this.waitingMessageIds[message.header.messageId]) {
+            if (this.waitingMessageIds[message.header.messageId].timeout) {
+                clearTimeout(this.waitingMessageIds[message.header.messageId].timeout);
+            }
+            this.waitingMessageIds[message.header.messageId].callback(null, message.payload || message);
+            delete this.waitingMessageIds[message.header.messageId];
+        }
+        else if (message.header.method === "PUSH") { // Otherwise process it accordingly
+            const namespace = message.header ? message.header.namespace : '';
+            this.emit('data', namespace, message.payload || message);
+        }
+        this.emit('rawData', message);
+    }
+
+    /**
+     * @deprecated
+     */
+    connect() {
+        this.deviceConnected = true;
+    }
+
+    /**
+     * @deprecated
+     */
+    disconnect() {
+        this.deviceConnected = false;
+    }
+
+    publishMessage(method, namespace, payload, callback) {
+        const messageId = this.cloudInst.sendMessage(this.dev, method, namespace, payload);
         if (callback) {
             this.waitingMessageIds[messageId] = {};
             this.waitingMessageIds[messageId].callback = callback;
@@ -339,8 +399,6 @@ class MerossCloudDevice extends EventEmitter {
         this.emit('rawSendData', data);
         return messageId;
     }
-
-
 
     getSystemAllData(callback) {
         // {"all":{"system":{"hardware":{"type":"mss425e","subType":"eu","version":"2.0.0","chipType":"mt7682","uuid":"1806299596727829081434298f15a991","macAddress":"34:29:8f:15:a9:91"},"firmware":{"version":"2.1.2","compileTime":"2018/08/13 10:42:53 GMT +08:00","wifiMac":"34:31:c4:73:3c:7f","innerIp":"192.168.178.86","server":"iot.meross.com","port":2001,"userId":64416},"time":{"timestamp":1539612975,"timezone":"Europe/Berlin","timeRule":[[1521939600,7200,1],[1540688400,3600,0],[1553994000,7200,1],[1572138000,3600,0],[1585443600,7200,1],[1603587600,3600,0],[1616893200,7200,1],[1635642000,3600,0],[1648342800,7200,1],[1667091600,3600,0],[1679792400,7200,1],[1698541200,3600,0],[1711846800,7200,1],[1729990800,3600,0],[1743296400,7200,1],[1761440400,3600,0],[1774746000,7200,1],[1792890000,3600,0],[1806195600,7200,1],[1824944400,3600,0]]},"online":{"status":1}},"digest":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539608841},{"channel":1,"onoff":0,"lmTime":1539608841},{"channel":2,"onoff":0,"lmTime":1539608841},{"channel":3,"onoff":0,"lmTime":1539608841},{"channel":4,"onoff":0,"lmTime":1539608841}],"triggerx":[],"timerx":[]}}}
@@ -483,8 +541,8 @@ class MerossCloudDevice extends EventEmitter {
 
 class MerossCloudHubDevice extends MerossCloudDevice {
 
-    constructor(token, key, userId, dev, subDeviceList) {
-        super(token, key, userId, dev);
+    constructor(cloudInstance, dev, subDeviceList) {
+        super(cloudInstance, dev);
 
         this.subDeviceList = subDeviceList;
     }
