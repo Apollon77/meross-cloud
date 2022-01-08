@@ -14,6 +14,7 @@ const { v4: uuidv4 } = require('uuid');
 const SECRET = '23x17ahWarFH6w29';
 const MEROSS_URL = 'https://iot.meross.com';
 const LOGIN_URL = MEROSS_URL + '/v1/Auth/Login';
+const LOGOUT_URL = MEROSS_URL + '/v1/Profile/logout';
 const DEV_LIST = MEROSS_URL + '/v1/Device/devList';
 const SUBDEV_LIST = MEROSS_URL + '/v1/Hub/getSubDevices';
 
@@ -201,6 +202,26 @@ class MerossCloud extends EventEmitter {
 
         {"header":{"messageId":"98fee66789f75eb0e149f2a5116f919c","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539633281,"timestampMs":609,"sign":"dd6bf3acee81a6c46f6fedd02515ddf3"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539633280},{"channel":1,"onoff":0,"lmTime":1539633280},{"channel":2,"onoff":0,"lmTime":1539633280},{"channel":3,"onoff":0,"lmTime":1539633280},{"channel":4,"onoff":0,"lmTime":1539633280}]}}
         */
+    }
+
+    logout(callback) {
+        if (!this.authenticated || !this.token) {
+            return callback && callback(new Error('Not authenticated'));
+        }
+        this.authenticatedPost(LOGOUT_URL, {}, (err, logoutResponse) => {
+            console.log(logoutResponse);
+            if (err) {
+                callback && callback(err);
+                return;
+            }
+            this.token = null;
+            this.key = null;
+            this.userId = null;
+            this.userEmail = null;
+            this.authenticated = false;
+
+            callback && callback();
+        });
     }
 
     getDevice(uuid) {

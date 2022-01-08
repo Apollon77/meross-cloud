@@ -54,9 +54,10 @@ declare module 'meross-cloud' {
     }
 
     export interface CloudOptions {
-        email: string
-        password: string
-        logger?: Function
+        email: string;
+        password: string;
+        logger?: Function;
+        localHttpFirst?: boolean
     }
 
     export interface LightData {
@@ -68,6 +69,17 @@ declare module 'meross-cloud' {
         luminance?: number;
     }
 
+    export interface ThermostatModeData {
+        channel: number;
+        heatTemp?: number;
+        coolTemp?: number;
+        manualTemp?: number;
+        ecoTemp?: number;
+        targetTemp?: number;
+        mode?: number;
+        onoff?: number;
+    }
+
     export type Callback<T> = (error: Error | null, data: T) => void
     export type ErrorCallback = (error: Error | null) => void
     export type DeviceInitializedEvent = 'deviceInitialized'
@@ -75,14 +87,27 @@ declare module 'meross-cloud' {
     export type DeviceInitializedCallback = (deviceId: string, deviceDef: DeviceDefinition, device: MerossCloudDevice) => void
 
     export class MerossCloud extends EventEmitter {
-        constructor (options: CloudOptions)
-        connect (callback: Callback<number>): void
+        constructor(options: CloudOptions)
+        connect(callback: Callback<number>): void
         on(name: DeviceInitializedEvent, handler: DeviceInitializedCallback): this
+        logout(callback: Callback<number>): void
+        disconnectAll(force: boolean): void
+        getDevice(uuid: string): MerossCloudDevice
     }
 
     export class MerossCloudDevice extends EventEmitter {
+        /**
+         * @deprecated
+         */
         connect(): void
+        /**
+         * @deprecated
+         */
         disconnect(force: boolean): void
+
+        setKnownLocalIp(ip: string): void
+        removeKnownLocalIp(): void
+
         publishMessage(method: 'GET' | 'SET', namespace: string, payload: any, callback?: Callback<any>): number
 
         getSystemAllData(callback: Callback<any>): number
@@ -110,6 +135,7 @@ declare module 'meross-cloud' {
         controlLight(light: LightData, callback: Callback<any>): number
         controlDiffusorSpray(type: string, channel: number, mode: number, callback: Callback<any>): number
         controlDiffusorLight(type: string, light: LightData, callback: Callback<any>): number
+        controlThermostatMode(channel: number, modeData: ThermostatModeData, callback: Callback<any>)
         setSystemDNDMode(onoff: boolean, callback: Callback<any>): number
     }
 
