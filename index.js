@@ -334,11 +334,11 @@ class MerossCloud extends EventEmitter {
             json: payload,
             timeout: 3000,
         };
-        this.options.logger &&  this.options.logger('HTTP-Local-Call: ' + JSON.stringify(options));
+        this.options.logger &&  this.options.logger('HTTP-Local-Call ' + dev.uuid + ': ' + JSON.stringify(options));
         // Perform the request.
         request(options, (error, response, body) => {
             if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger('HTTP-Local-Response OK: ' + JSON.stringify(body));
+                this.options.logger && this.options.logger('HTTP-Local-Response OK ' + dev.uuid + ': ' + JSON.stringify(body));
                 if (body) {
                     setImmediate(() => {
                         this.devices[dev.uuid].handleMessage(body);
@@ -347,7 +347,7 @@ class MerossCloud extends EventEmitter {
                 }
                 return callback && callback(new Error(body.apiStatus + ': ' + body.info));
             }
-            this.options.logger && this.options.logger('HTTP-Local-Response Error: ' + error + ' / Status=' + (response ? response.statusCode: '--'));
+            this.options.logger && this.options.logger('HTTP-Local-Response Error ' + dev.uuid + ': ' + error + ' / Status=' + (response ? response.statusCode: '--'));
             return callback && callback(error);
         });
     }
@@ -436,14 +436,18 @@ class MerossCloudDevice extends EventEmitter {
         this.deviceConnected = false;
     }
 
-    setKnownInnerIp(ip) {
-        this.knownInnerIp = ip;
+    setKnownLocalIp(ip) {
+        this.knownLocalIp = ip;
+    }
+
+    removeKnownLocalIp() {
+        this.knownLocalIp = '';
     }
 
     publishMessage(method, namespace, payload, callback) {
         const data = this.cloudInst.encodeMessage(method, namespace, payload);
         const messageId = data.header.messageId;
-        this.cloudInst.sendMessage(this.dev, this.knownInnerIp, data, res => {
+        this.cloudInst.sendMessage(this.dev, this.knownLocalIp, data, res => {
             if (!res) {
                 return callback && callback(new Error('Device has no data connection available'));
             }
