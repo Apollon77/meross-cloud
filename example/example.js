@@ -8,9 +8,10 @@
 const MerossCloud = require('../index.js');
 
 const options = {
-    'email': 'email',
-    'password': 'password',
-    'logger': console.log
+    email: 'email',
+    password: 'password',
+    logger: console.log,
+    localHttpFirst: true
 };
 
 const meross = new MerossCloud(options);

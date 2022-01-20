@@ -5,7 +5,8 @@
 [![Downloads](https://img.shields.io/npm/dm/meross-cloud.svg)](https://www.npmjs.com/package/meross-cloud)
 ![Test and Release](https://github.com/Apollon77/meross-cloud/workflows/Test%20and%20Release/badge.svg)
 
-This library allows to login into Meross cloud server, read the registered devices and open connections to the MQTT cloud server to get the datatosign
+This library allows to login into Meross cloud server, read the registered devices and open connections to the MQTT cloud server to get the data.
+The library tries to control the devices locally first (if "localHttpFirst" option is set to true), else will control via cloud server.
 
 ## Example
 
