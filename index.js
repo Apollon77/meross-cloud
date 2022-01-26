@@ -333,7 +333,7 @@ class MerossCloud extends EventEmitter {
             }
             if (this.mqttConnections[domain].client.connected) {
                 setImmediate(() => {
-                    this.devices[dev].emit('connected');
+                    this.devices[dev] && this.devices[dev].emit('connected');
                 });
             }
         }
