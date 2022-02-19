@@ -425,6 +425,7 @@ class MerossCloudDevice extends EventEmitter {
 
     handleMessage(message) {
         if (!this.deviceConnected) return;
+        if (!message || !message.header) return;
         if (message && message.header && message.header.from && !message.header.from.includes(this.dev.uuid)) return;
         // {"header":{"messageId":"14b4951d0627ea904dd8685c480b7b2e","namespace":"Appliance.Control.ToggleX","method":"PUSH","payloadVersion":1,"from":"/appliance/1806299596727829081434298f15a991/publish","timestamp":1539602435,"timestampMs":427,"sign":"f33bb034ac2d5d39289e6fa3dcead081"},"payload":{"togglex":[{"channel":0,"onoff":0,"lmTime":1539602434},{"channel":1,"onoff":0,"lmTime":1539602434},{"channel":2,"onoff":0,"lmTime":1539602434},{"channel":3,"onoff":0,"lmTime":1539602434},{"channel":4,"onoff":0,"lmTime":1539602434}]}}
 
