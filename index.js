@@ -10,13 +10,14 @@ const crypto = require('crypto');
 const request = require('request');
 const EventEmitter = require('events');
 const { v4: uuidv4 } = require('uuid');
+const { getErrorMessage } = require('./lib/errorcodes');
 
 const SECRET = '23x17ahWarFH6w29';
 const MEROSS_URL = 'https://iot.meross.com';
-const LOGIN_URL = MEROSS_URL + '/v1/Auth/Login';
-const LOGOUT_URL = MEROSS_URL + '/v1/Profile/logout';
-const DEV_LIST = MEROSS_URL + '/v1/Device/devList';
-const SUBDEV_LIST = MEROSS_URL + '/v1/Hub/getSubDevices';
+const LOGIN_URL = `${MEROSS_URL}/v1/Auth/Login`;
+const LOGOUT_URL = `${MEROSS_URL}/v1/Profile/logout`;
+const DEV_LIST = `${MEROSS_URL}/v1/Device/devList`;
+const SUBDEV_LIST = `${MEROSS_URL}/v1/Hub/getSubDevices`;
 
 function generateRandomString(length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -66,11 +67,12 @@ class MerossCloud extends EventEmitter {
         const datatosign = SECRET + timestampMillis + nonce + loginParams;
         const md5hash = crypto.createHash('md5').update(datatosign).digest("hex");
         const headers = {
-            "Authorization": "Basic " + (this.token || ''),
-            "vender": "Meross",
-            "AppVersion": "1.3.0",
+            "Authorization": `Basic ${this.token || ''}`,
+            "vender": "meross",
+            "AppVersion": "0.4.4.4",
+            "AppType": "MerossIOT",
             "AppLanguage": "EN",
-            "User-Agent": "okhttp/3.6.0"
+            "User-Agent": "MerossIOT/0.4.4.4"
         };
 
         const payload = {
@@ -86,11 +88,11 @@ class MerossCloud extends EventEmitter {
             headers: headers,
             form: payload
         };
-        this.options.logger &&  this.options.logger('HTTP-Call: ' + JSON.stringify(options));
+        this.options.logger &&  this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
         // Perform the request.
         request(options, (error, response, body) => {
             if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger('HTTP-Response OK: ' + body);
+                this.options.logger && this.options.logger(`HTTP-Response OK: ${body}`);
                 try {
                     body = JSON.parse(body);
                 }
@@ -98,12 +100,12 @@ class MerossCloud extends EventEmitter {
                     body = {};
                 }
 
-                if (body.info === 'Success') {
+                if (body.apiStatus === 0) {
                     return callback && callback(null, body.data);
                 }
-                return callback && callback(new Error(body.apiStatus + ': ' + body.info));
+                return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
             }
-            this.options.logger && this.options.logger('HTTP-Response Error: ' + error + ' / Status=' + (response ? response.statusCode: '--'));
+            this.options.logger && this.options.logger(`HTTP-Response Error: ${error} / Status=${response ? response.statusCode : '--'}`);
             return callback && callback(error);
         });
     }
@@ -143,10 +145,22 @@ class MerossCloud extends EventEmitter {
         if (!this.options.password) {
             return callback && callback(new Error('Password missing'));
         }
+        const logIdentifier = generateRandomString(30) + uuidv4();
+        //'0b11b194f83724b614a6975b112f63cee2f098-8125-40c7-a280-5115913d9887';// '%030x' % random.randrange(16 ** 30) + str(uuid.uuid4())
+        // 54dp8pv70pz0a94ye8c1q5j13nhtb55dc30135-0cd6-4801-bc13-8608120b05d6
+        // aa965f72dc01d414d8efa8360bade3  36894452-c55b-4f10-8ca3-c60edba97728
         const data = {
             email: this.options.email,
-            password: this.options.password
+            password: this.options.password,
+            mobileInfo: {
+                "deviceModel": "",
+                "mobileOsVersion": "",
+                "mobileOs": process.platform,
+                "uuid": logIdentifier,
+                "carrier":""
+            }
         };
+        console.log(JSON.stringify(data));
 
         this.authenticatedPost(LOGIN_URL, data, (err, loginResponse) => {
             //console.log(loginResponse);
@@ -174,7 +188,7 @@ class MerossCloud extends EventEmitter {
                     deviceList.forEach((dev) => {
                         //const deviceType = dev.deviceType;
                         if (dev.deviceType.startsWith('msh300')) {
-                            this.options.logger && this.options.logger(dev.uuid + ' Detected Hub');
+                            this.options.logger && this.options.logger(`${dev.uuid} Detected Hub`);
                             this.authenticatedPost(SUBDEV_LIST, {uuid: dev.uuid}, (err, subDeviceList) => {
                                 this.connectDevice(new MerossCloudHubDevice(this, dev, subDeviceList), dev);
                                 initCounter++;
@@ -241,8 +255,8 @@ class MerossCloud extends EventEmitter {
     initMqtt(dev) {
         const domain = dev.domain || "eu-iot.meross.com"; // reservedDomain ???
         if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client) {
-            const appId = crypto.createHash('md5').update('API' + uuidv4()).digest("hex");
-            const clientId = 'app:' + appId;
+            const appId = crypto.createHash('md5').update(`API${uuidv4()}`).digest("hex");
+            const clientId = `app:${appId}`;
 
             // Password is calculated as the MD5 of USERID concatenated with KEY
             const hashedPassword = crypto.createHash('md5').update(this.userId + this.key).digest("hex");
@@ -272,14 +286,14 @@ class MerossCloud extends EventEmitter {
             this.mqttConnections[domain].client.on('connect', () => {
                 //console.log("Connected. Subscribe to user topics");
 
-                this.mqttConnections[domain].client.subscribe('/app/' + this.userId + '/subscribe', (err) => {
+                this.mqttConnections[domain].client.subscribe(`/app/${this.userId}/subscribe`, (err) => {
                     if (err) {
                         this.emit('error', err);
                     }
                     //console.log('User Subscribe Done');
                 });
 
-                this.clientResponseTopic = '/app/' + this.userId + '-' + appId + '/subscribe';
+                this.clientResponseTopic = `/app/${this.userId}-${appId}/subscribe`;
 
                 this.mqttConnections[domain].client.subscribe(this.clientResponseTopic, (err) => {
                     if (err) {
@@ -316,7 +330,7 @@ class MerossCloud extends EventEmitter {
                 try {
                     message = JSON.parse(message.toString());
                 } catch (err) {
-                    this.emit('error', 'JSON parse error: ' + err);
+                    this.emit('error', `JSON parse error: ${err}`);
                     return;
                 }
 
@@ -344,7 +358,7 @@ class MerossCloud extends EventEmitter {
             return false;
         }
 
-        this.mqttConnections[dev.domain].client.publish('/appliance/' + dev.uuid + '/subscribe', JSON.stringify(data));
+        this.mqttConnections[dev.domain].client.publish(`/appliance/${dev.uuid}/subscribe`, JSON.stringify(data));
         return true;
     }
 
@@ -355,20 +369,20 @@ class MerossCloud extends EventEmitter {
             json: payload,
             timeout: 3000,
         };
-        this.options.logger &&  this.options.logger('HTTP-Local-Call ' + dev.uuid + ': ' + JSON.stringify(options));
+        this.options.logger &&  this.options.logger(`HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`);
         // Perform the request.
         request(options, (error, response, body) => {
             if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger('HTTP-Local-Response OK ' + dev.uuid + ': ' + JSON.stringify(body));
+                this.options.logger && this.options.logger(`HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(body)}`);
                 if (body) {
                     setImmediate(() => {
                         this.devices[dev.uuid].handleMessage(body);
                     })
                     return callback && callback(null);
                 }
-                return callback && callback(new Error(body.apiStatus + ': ' + body.info));
+                return callback && callback(new Error(`${body.apiStatus}: ${body.info}`));
             }
-            this.options.logger && this.options.logger('HTTP-Local-Response Error ' + dev.uuid + ': ' + error + ' / Status=' + (response ? response.statusCode: '--'));
+            this.options.logger && this.options.logger(`HTTP-Local-Response Error ${dev.uuid}: ${error} / Status=${response ? response.statusCode : '--'}`);
             return callback && callback(error);
         });
     }
