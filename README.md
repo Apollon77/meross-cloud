@@ -19,7 +19,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-### __WORK IN PROGRESS__
+### 1.8.1 (2022-05-31)
 * (Apollon77) Add timeout parameter to options to use as request timeout. For MQTT data requests the timeout is doubled
 * (Apollon77) Lower the MQTT timeout from 20s to 6s. Can be increased using timeout parameter again if needed
 
