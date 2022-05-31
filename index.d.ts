@@ -57,7 +57,8 @@ declare module 'meross-cloud' {
         email: string;
         password: string;
         logger?: Function;
-        localHttpFirst?: boolean
+        localHttpFirst?: boolean,
+        timeout?: number
     }
 
     export interface LightData {
