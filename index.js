@@ -40,6 +40,7 @@ class MerossCloud extends EventEmitter {
         email
         password
         localHttpFirst
+        timeout
     */
 
     constructor(options) {
@@ -53,6 +54,8 @@ class MerossCloud extends EventEmitter {
         this.authenticated = false;
 
         this.localHttpFirst = options.localHttpFirst;
+
+        this.timeout = options.timeout || 3000;
 
         this.mqttConnections = {};
         this.devices = {};
@@ -86,7 +89,8 @@ class MerossCloud extends EventEmitter {
             url: url,
             method: 'POST',
             headers: headers,
-            form: payload
+            form: payload,
+            timeout: this.timeout || 3000
         };
         this.options.logger &&  this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
         // Perform the request.
@@ -367,7 +371,7 @@ class MerossCloud extends EventEmitter {
             url: `http://${ip}/config`,
             method: 'POST',
             json: payload,
-            timeout: 3000,
+            timeout: this.timeout || 3000
         };
         this.options.logger &&  this.options.logger(`HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`);
         // Perform the request.
@@ -496,7 +500,7 @@ class MerossCloudDevice extends EventEmitter {
                         this.waitingMessageIds[messageId].callback(new Error('Timeout'));
                     }
                     delete this.waitingMessageIds[messageId];
-                }, 20000);
+                }, this.cloudInst.timeout * 2);
             }
             this.emit('rawSendData', data);
         });

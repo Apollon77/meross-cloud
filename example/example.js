@@ -11,7 +11,8 @@ const options = {
     email: 'email',
     password: 'password',
     logger: console.log,
-    localHttpFirst: true
+    localHttpFirst: true,
+    timeout: 3000 // Default is 3000
 };
 
 const meross = new MerossCloud(options);
