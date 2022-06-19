@@ -307,16 +307,30 @@ class MerossCloud extends EventEmitter {
                 });
 
                 this.mqttConnections[domain].deviceList.forEach(devId => {
-                    this.devices[devId].emit('connected');
+                    this.devices[devId].emit(this.mqttConnections[domain].silentReInitialization ? 'reconnect' : 'connected');
                 });
+                this.mqttConnections[domain].silentReInitialization = false;
             });
 
             this.mqttConnections[domain].client.on('error', (error) => {
+                if (error && error.toString().includes('Server unavailable')) {
+                    this.mqttConnections[domain].silentReInitialization = true;
+                    this.mqttConnections[domain].client.end(true);
+                    if (this.mqttConnections[domain].deviceList.length) {
+                        setImmediate(() => {
+                            this.mqttConnections[domain].client = null;
+                            this.initMqtt(this.devices[this.mqttConnections[domain].deviceList[0]]);
+                        });
+                    }
+                }
                 this.mqttConnections[domain].deviceList.forEach(devId => {
                    this.devices[devId].emit('error', error ? error.toString() : null);
                 });
             });
             this.mqttConnections[domain].client.on('close', (error) => {
+                if (this.mqttConnections[domain].silentReInitialization) {
+                    return;
+                }
                 this.mqttConnections[domain].deviceList.forEach(devId => {
                     this.devices[devId].emit('close', error ? error.toString() : null);
                 });
@@ -397,7 +411,7 @@ class MerossCloud extends EventEmitter {
 
         const signature = crypto.createHash('md5').update(messageId + this.key + timestamp).digest("hex");
 
-        const data = {
+        return {
             "header": {
                 "from": this.clientResponseTopic,
                 "messageId": messageId, // Example: "122e3e47835fefcd8aaf22d13ce21859"
@@ -409,7 +423,6 @@ class MerossCloud extends EventEmitter {
             },
             "payload": payload
         };
-        return data;
     }
 
     sendMessage(dev, ip, data, callback) {
