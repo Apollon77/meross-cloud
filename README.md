@@ -19,8 +19,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 1.9.0 (2022-06-19)
 * (Apollon77) Detect MQTT reconnect issue "Server unavailable" and reinitialize the MQTT connection completely - this case is silently handled as reconnect!
 
 ### 1.8.1 (2022-05-31)
