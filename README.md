@@ -8,6 +8,10 @@
 This library allows to login into Meross cloud server, read the registered devices and open connections to the MQTT cloud server to get the data.
 The library tries to control the devices locally first (if "localHttpFirst" option is set to true), else will control via cloud server.
 
+## Disclaimer
+**All product and company names or logos are trademarks™ or registered® trademarks of their respective holders. Use of them does not imply any affiliation with or endorsement by them or any associated subsidiaries! This personal project is maintained in spare time and has no business goal.**
+**MEROSS is a trademark of Chengdu Meross Technology Co., Ltd.**
+
 ## Example
 
 see example folder
