@@ -307,7 +307,7 @@ class MerossCloud extends EventEmitter {
                 });
 
                 this.mqttConnections[domain].deviceList.forEach(devId => {
-                    this.devices[devId].emit(this.mqttConnections[domain].silentReInitialization ? 'reconnect' : 'connected');
+                    this.devices[devId] && this.devices[devId].emit(this.mqttConnections[domain].silentReInitialization ? 'reconnect' : 'connected');
                 });
                 this.mqttConnections[domain].silentReInitialization = false;
             });
@@ -376,7 +376,11 @@ class MerossCloud extends EventEmitter {
             return false;
         }
 
-        this.mqttConnections[dev.domain].client.publish(`/appliance/${dev.uuid}/subscribe`, JSON.stringify(data));
+        this.mqttConnections[dev.domain].client.publish(`/appliance/${dev.uuid}/subscribe`, JSON.stringify(data), undefined, err => {
+            if (err) {
+                this.emit('error', dev.uuid, err);
+            }
+        });
         return true;
     }
 
