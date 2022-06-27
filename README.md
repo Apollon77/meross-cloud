@@ -23,8 +23,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 1.9.1 (2022-06-27)
 * (Apollon77) Also emit an error event if publishing an MQTT message fails
 
 ### 1.9.0 (2022-06-19)
