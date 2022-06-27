@@ -125,7 +125,7 @@ class MerossCloud extends EventEmitter {
         });
         this.devices[deviceId].on('error', (error) => {
             if (!this.listenerCount('error')) return;
-            this.emit('error', deviceId, error);
+            this.emit('error', error, deviceId);
         });
         this.devices[deviceId].on('reconnect', () => {
             this.emit('reconnect', deviceId);
@@ -378,7 +378,7 @@ class MerossCloud extends EventEmitter {
 
         this.mqttConnections[dev.domain].client.publish(`/appliance/${dev.uuid}/subscribe`, JSON.stringify(data), undefined, err => {
             if (err) {
-                this.emit('error', dev.uuid, err);
+                this.devices[dev.uuid] && this.devices[dev.uuid].emit('error', err);
             }
         });
         return true;
