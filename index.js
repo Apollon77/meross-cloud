@@ -377,6 +377,7 @@ class MerossCloud extends EventEmitter {
             return false;
         }
 
+        this.options.logger &&  this.options.logger(`MQTT-Cloud-Call ${dev.uuid}: ${JSON.stringify(data)}`);
         this.mqttConnections[dev.domain].client.publish(`/appliance/${dev.uuid}/subscribe`, JSON.stringify(data), undefined, err => {
             if (err) {
                 this.devices[dev.uuid] && this.devices[dev.uuid].emit('error', err);
@@ -435,7 +436,7 @@ class MerossCloud extends EventEmitter {
             this.sendMessageHttp(dev, ip, data, err => {
                 let res = !err;
                 const isGetMessage = data && data.header && data.header.method === 'GET';
-                let resendToCloud = !isGetMessage || (isGetMessage && this.onlyLocalForGet);
+                let resendToCloud = !isGetMessage || (isGetMessage && !this.onlyLocalForGet);
                 if (err && resendToCloud) {
                     res = this.sendMessageMqtt(dev, data);
                 }
