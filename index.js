@@ -53,9 +53,10 @@ class MerossCloud extends EventEmitter {
         this.userEmail = null;
         this.authenticated = false;
 
-        this.localHttpFirst = options.localHttpFirst;
+        this.localHttpFirst = !!options.localHttpFirst;
+        this.onlyLocalForGet = this.localHttpFirst ? !!options.onlyLocalForGet : false;
 
-        this.timeout = options.timeout || 3000;
+        this.timeout = options.timeout || 10000;
 
         this.mqttConnections = {};
         this.devices = {};
@@ -90,7 +91,7 @@ class MerossCloud extends EventEmitter {
             method: 'POST',
             headers: headers,
             form: payload,
-            timeout: this.timeout || 3000
+            timeout: this.timeout
         };
         this.options.logger &&  this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
         // Perform the request.
@@ -389,7 +390,7 @@ class MerossCloud extends EventEmitter {
             url: `http://${ip}/config`,
             method: 'POST',
             json: payload,
-            timeout: this.timeout || 3000
+            timeout: this.timeout
         };
         this.options.logger &&  this.options.logger(`HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`);
         // Perform the request.
@@ -433,7 +434,9 @@ class MerossCloud extends EventEmitter {
         if (this.localHttpFirst && ip) {
             this.sendMessageHttp(dev, ip, data, err => {
                 let res = !err;
-                if (err) {
+                const isGetMessage = data && data.header && data.header.method === 'GET';
+                let resendToCloud = !isGetMessage || (isGetMessage && this.onlyLocalForGet);
+                if (err && resendToCloud) {
                     res = this.sendMessageMqtt(dev, data);
                 }
                 callback && callback(res);

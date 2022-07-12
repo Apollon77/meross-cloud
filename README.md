@@ -23,6 +23,10 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Add new option to define that GET requests are only tried locally and not resend to cloud on error.
+
 ### 2.0.0 (2022-06-27)
 * (Apollon77) Major change: the error event emitted on MerossCloud instance has now as first parameter the error info and second an optional device id!! Before this was partially switched
 

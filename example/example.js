@@ -11,7 +11,8 @@ const options = {
     email: 'email',
     password: 'password',
     logger: console.log,
-    localHttpFirst: true,
+    localHttpFirst: true, // Try to contact the devices locally before trying the cloud
+    onlyLocalForGet: true, // When trying locally, do not try the cloud for GET requests at all
     timeout: 3000 // Default is 3000
 };
 

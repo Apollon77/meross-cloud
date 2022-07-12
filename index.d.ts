@@ -58,6 +58,7 @@ declare module 'meross-cloud' {
         password: string;
         logger?: Function;
         localHttpFirst?: boolean,
+        onlyLocalForGet?: boolean,
         timeout?: number
     }
 
