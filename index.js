@@ -165,7 +165,6 @@ class MerossCloud extends EventEmitter {
                 "carrier":""
             }
         };
-        console.log(JSON.stringify(data));
 
         this.authenticatedPost(LOGIN_URL, data, (err, loginResponse) => {
             //console.log(loginResponse);
