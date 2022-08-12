@@ -325,7 +325,7 @@ class MerossCloud extends EventEmitter {
                     }
                 }
                 this.mqttConnections[domain].deviceList.forEach(devId => {
-                   this.devices[devId].emit('error', error ? error.toString() : null);
+                    this.devices[devId] && this.devices[devId].emit('error', error ? error.toString() : null);
                 });
             });
             this.mqttConnections[domain].client.on('close', (error) => {
@@ -333,12 +333,12 @@ class MerossCloud extends EventEmitter {
                     return;
                 }
                 this.mqttConnections[domain].deviceList.forEach(devId => {
-                    this.devices[devId].emit('close', error ? error.toString() : null);
+                    this.devices[devId] && this.devices[devId].emit('close', error ? error.toString() : null);
                 });
             });
             this.mqttConnections[domain].client.on('reconnect', () => {
                 this.mqttConnections[domain].deviceList.forEach(devId => {
-                    this.devices[devId].emit('reconnect');
+                    this.devices[devId] && this.devices[devId].emit('reconnect');
                 });
             });
 
