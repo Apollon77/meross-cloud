@@ -1,6 +1,6 @@
 {
   "name": "meross-cloud",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Control Meross cloud devices using nodejs",
   "author": "Ingo Fischer <iobroker@fischer-ka.de>",
   "contributors": [],
