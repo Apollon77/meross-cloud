@@ -23,6 +23,10 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (JackReevies) Remove not needed console logging
+
 ### 2.1.1 (2022-07-12)
 * (Apollon77) Fix new logic
 

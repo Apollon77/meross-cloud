@@ -165,6 +165,7 @@ class MerossCloud extends EventEmitter {
                 "carrier":""
             }
         };
+        //console.log(JSON.stringify(data));
 
         this.authenticatedPost(LOGIN_URL, data, (err, loginResponse) => {
             //console.log(loginResponse);
@@ -227,7 +228,7 @@ class MerossCloud extends EventEmitter {
             return callback && callback(new Error('Not authenticated'));
         }
         this.authenticatedPost(LOGOUT_URL, {}, (err, logoutResponse) => {
-            console.log(logoutResponse);
+            //console.log(logoutResponse);
             if (err) {
                 callback && callback(err);
                 return;
