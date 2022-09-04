@@ -23,6 +23,11 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Add support for FilterMaintenance data of MAP100 air purifier
+* (Apollon77) Fix typings: messageId returned by many calls is a string and not a number 
+
 ### 2.1.3 (2022-08-12)
 * (Apollon77) Prevent some crash cases reported by Sentry
 

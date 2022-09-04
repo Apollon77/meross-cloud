@@ -82,6 +82,7 @@ declare module 'meross-cloud' {
         onoff?: number;
     }
 
+    export type MessageId = string
     export type Callback<T> = (error: Error | null, data: T) => void
     export type ErrorCallback = (error: Error | null) => void
     export type DeviceInitializedEvent = 'deviceInitialized'
@@ -110,35 +111,36 @@ declare module 'meross-cloud' {
         setKnownLocalIp(ip: string): void
         removeKnownLocalIp(): void
 
-        publishMessage(method: 'GET' | 'SET', namespace: string, payload: any, callback?: Callback<any>): number
+        publishMessage(method: 'GET' | 'SET', namespace: string, payload: any, callback?: Callback<any>): MessageId
 
-        getSystemAllData(callback: Callback<any>): number
-        getSystemDebug(callback: Callback<any>): number
-        getSystemAbilities(callback: Callback<any>): number
-        getSystemReport(callback: Callback<any>): number
-        getSystemRuntime(callback: Callback<any>): number
-        getSystemDNDMode(callback: Callback<any>): number
-        getOnlineStatus(callback: Callback<any>): number
-        getConfigWifiList(callback: Callback<any>): number
-        getConfigTrace(callback: Callback<any>): number
-        getControlPowerConsumption(callback: Callback<any>): number
-        getControlPowerConsumptionX(callback: Callback<GetControlPowerConsumptionXResponse>): number
-        getControlElectricity(callback: Callback<GetControlElectricityResponse>): number
-        getRollerShutterState(callback: Callback<any>): number
-        getRollerShutterPosition(callback: Callback<any>): number
+        getSystemAllData(callback: Callback<any>): MessageId
+        getSystemDebug(callback: Callback<any>): MessageId
+        getSystemAbilities(callback: Callback<any>): MessageId
+        getSystemReport(callback: Callback<any>): MessageId
+        getSystemRuntime(callback: Callback<any>): MessageId
+        getSystemDNDMode(callback: Callback<any>): MessageId
+        getOnlineStatus(callback: Callback<any>): MessageId
+        getConfigWifiList(callback: Callback<any>): MessageId
+        getConfigTrace(callback: Callback<any>): MessageId
+        getControlPowerConsumption(callback: Callback<any>): MessageId
+        getControlPowerConsumptionX(callback: Callback<GetControlPowerConsumptionXResponse>): MessageId
+        getControlElectricity(callback: Callback<GetControlElectricityResponse>): MessageId
+        getRollerShutterState(callback: Callback<any>): MessageId
+        getRollerShutterPosition(callback: Callback<any>): MessageId
+        getFilterMaintenance(callback: Callback<any>): MessageId
 
-        controlToggle(onoff: boolean, callback: Callback<any>): number
-        controlToggleX(channel: number, onoff: boolean, callback: Callback<any>): number
-        controlSpray(channel: number, mode: number, callback: Callback<any>): number
-        controlRollerShutterUp(channel: number, callback: Callback<any>): number
-        controlRollerShutterDown(channel: number, callback: Callback<any>): number
-        controlRollerShutterStop(channel: number, callback: Callback<any>): number
-        controlGarageDoor(channel: number, open: boolean, callback: Callback<any>): number
-        controlLight(light: LightData, callback: Callback<any>): number
-        controlDiffusorSpray(type: string, channel: number, mode: number, callback: Callback<any>): number
-        controlDiffusorLight(type: string, light: LightData, callback: Callback<any>): number
-        controlThermostatMode(channel: number, modeData: ThermostatModeData, callback: Callback<any>)
-        setSystemDNDMode(onoff: boolean, callback: Callback<any>): number
+        controlToggle(onoff: boolean, callback: Callback<any>): MessageId
+        controlToggleX(channel: number, onoff: boolean, callback: Callback<any>): MessageId
+        controlSpray(channel: number, mode: number, callback: Callback<any>): MessageId
+        controlRollerShutterUp(channel: number, callback: Callback<any>): MessageId
+        controlRollerShutterDown(channel: number, callback: Callback<any>): MessageId
+        controlRollerShutterStop(channel: number, callback: Callback<any>): MessageId
+        controlGarageDoor(channel: number, open: boolean, callback: Callback<any>): MessageId
+        controlLight(light: LightData, callback: Callback<any>): MessageId
+        controlDiffusorSpray(type: string, channel: number, mode: number, callback: Callback<any>): MessageId
+        controlDiffusorLight(type: string, light: LightData, callback: Callback<any>): MessageId
+        controlThermostatMode(channel: number, modeData: ThermostatModeData, callback: Callback<any>): MessageId
+        setSystemDNDMode(onoff: boolean, callback: Callback<any>): MessageId
     }
 
     export default MerossCloud

@@ -632,6 +632,10 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.RollerShutter.State", {}, callback);
     }
 
+    getFilterMaintenance(callback) {
+        return this.publishMessage("GET", "Appliance.Control.FilterMaintenance", {}, callback);
+    }
+
     getRollerShutterPosition(callback) {
         return this.publishMessage("GET", "Appliance.RollerShutter.Position", {}, callback);
     }
