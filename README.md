@@ -23,8 +23,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 2.3.0 (2022-09-19)
 * (Apollon77) Add support for additional MAP100 air purifier data
 
 ### 2.2.0 (2022-09-04)
