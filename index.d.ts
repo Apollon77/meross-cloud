@@ -128,6 +128,8 @@ declare module 'meross-cloud' {
         getRollerShutterState(callback: Callback<any>): MessageId
         getRollerShutterPosition(callback: Callback<any>): MessageId
         getFilterMaintenance(callback: Callback<any>): MessageId
+        getPhysicalLockState(callback: Callback<any>): MessageId
+        getFanState(callback: Callback<any>): MessageId
 
         controlToggle(onoff: boolean, callback: Callback<any>): MessageId
         controlToggleX(channel: number, onoff: boolean, callback: Callback<any>): MessageId
@@ -140,6 +142,8 @@ declare module 'meross-cloud' {
         controlDiffusorSpray(type: string, channel: number, mode: number, callback: Callback<any>): MessageId
         controlDiffusorLight(type: string, light: LightData, callback: Callback<any>): MessageId
         controlThermostatMode(channel: number, modeData: ThermostatModeData, callback: Callback<any>): MessageId
+        controlPhysicalLock(channel: number, locked: boolean, callback: Callback<any>): MessageId
+        controlFan(channel: number, speed: number, maxSpeed: number, callback: Callback<any>): MessageId
         setSystemDNDMode(onoff: boolean, callback: Callback<any>): MessageId
     }
 

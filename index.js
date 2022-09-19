@@ -636,12 +636,30 @@ class MerossCloudDevice extends EventEmitter {
         return this.publishMessage("GET", "Appliance.Control.FilterMaintenance", {}, callback);
     }
 
+    getPhysicalLockState(callback) {
+        return this.publishMessage("GET", "Appliance.Control.PhysicalLock", {}, callback);
+    }
+
+    controlPhysicalLock(channel, locked, callback) {
+        const payload = {"lock": {"channel": channel, "onoff": locked ? 1 : 0, "uuid": this.dev.uuid}};
+        return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
+    }
+
+    getFanState(callback) {
+        return this.publishMessage("GET", "Appliance.Control.Fan", {}, callback);
+    }
+
+    controlFan(channel, speed, maxSpeed, callback) {
+        const payload = {"fan": [{"channel": channel, "speed": speed, "maxSpeed": maxSpeed, "uuid": this.dev.uuid}]};
+        return this.publishMessage("SET", "Appliance.Control.Fan", payload, callback);
+    }
+
     getRollerShutterPosition(callback) {
         return this.publishMessage("GET", "Appliance.RollerShutter.Position", {}, callback);
     }
 
     controlGarageDoor(channel, open, callback) {
-        const payload = {"state": {"channel": channel, "open": open ? 1 : 0, "uuid": this.dev.uuid}};
+        const payload = {"state": [{"channel": channel, "mode": mode || 0, "uuid": this.dev.uuid}]};
         return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
     }
 
