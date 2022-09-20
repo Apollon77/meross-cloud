@@ -659,7 +659,7 @@ class MerossCloudDevice extends EventEmitter {
     }
 
     controlGarageDoor(channel, open, callback) {
-        const payload = {"state": [{"channel": channel, "mode": mode || 0, "uuid": this.dev.uuid}]};
+        const payload = {"state": {"channel": channel, "open": open ? 1 : 0, "uuid": this.dev.uuid}};
         return this.publishMessage("SET", "Appliance.GarageDoor.State", payload, callback);
     }
 
