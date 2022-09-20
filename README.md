@@ -23,8 +23,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 2.3.1 (2022-09-20)
 * (Apollon77) Fix garage door state control
 
 ### 2.3.0 (2022-09-19)
