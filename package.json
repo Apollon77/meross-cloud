@@ -23,7 +23,7 @@
     "@alcalzone/release-script": "^3.5.9",
     "@alcalzone/release-script-plugin-license": "^3.5.9",
     "mocha": "^10.0.0",
-    "chai": "^4.3.6",
+    "chai": "^4.3.7",
     "istanbul": "^0.4.5",
     "sinon": "^14.0.0",
     "nock": "^13.2.7"
