@@ -18,11 +18,16 @@ see example folder
 
 ## Todo
 * Experiment with multiple MQTT connections vs only one and maybe optimize
+* Find out how reading of Fan and Childlook works :-(
 
 ## Credits
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Prevented crash case reported by Sentry
+
 ### 2.3.1 (2022-09-20)
 * (Apollon77) Fix garage door state control
 
