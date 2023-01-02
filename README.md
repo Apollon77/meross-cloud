@@ -24,8 +24,7 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
-
-### __WORK IN PROGRESS__
+### 2.4.0 (2023-01-02)
 * (Apollon77) Added controlRollerShutterPosition that might work with Homekit versions of shutter devices
 * (Apollon77) Prevented crash case reported by Sentry
 
