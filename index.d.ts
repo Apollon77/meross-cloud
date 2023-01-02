@@ -134,6 +134,7 @@ declare module 'meross-cloud' {
         controlToggle(onoff: boolean, callback: Callback<any>): MessageId
         controlToggleX(channel: number, onoff: boolean, callback: Callback<any>): MessageId
         controlSpray(channel: number, mode: number, callback: Callback<any>): MessageId
+        controlRollerShutterPosition(channel: number, position: number, callback: Callback<any>): MessageId
         controlRollerShutterUp(channel: number, callback: Callback<any>): MessageId
         controlRollerShutterDown(channel: number, callback: Callback<any>): MessageId
         controlRollerShutterStop(channel: number, callback: Callback<any>): MessageId

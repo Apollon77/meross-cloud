@@ -26,6 +26,7 @@ The library is partially based on the Python project https://github.com/albertog
 ## Changelog
 
 ### __WORK IN PROGRESS__
+* (Apollon77) Added controlRollerShutterPosition that might work with Homekit versions of shutter devices
 * (Apollon77) Prevented crash case reported by Sentry
 
 ### 2.3.1 (2022-09-20)
