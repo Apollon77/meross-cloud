@@ -15,7 +15,7 @@
     "url": "https://github.com/Apollon77/meross-cloud"
   },
   "dependencies": {
-    "mqtt": "^4.3.7",
+    "mqtt": "^5.0.1",
     "request": "^2.88.2",
     "uuid": "^9.0.0"
   },
