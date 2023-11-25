@@ -264,7 +264,7 @@ class MerossCloud extends EventEmitter {
             const clientId = `app:${appId}`;
 
             // Password is calculated as the MD5 of USERID concatenated with KEY
-            const hashedPassword = crypto.createHash('md5').update(this.userId + this.key).digest("hex");
+            const hashedPassword = crypto.createHash('md5').update(`${this.userId}${this.key}`).digest("hex");
 
             if (!this.mqttConnections[domain]) {
                 this.mqttConnections[domain] = {};

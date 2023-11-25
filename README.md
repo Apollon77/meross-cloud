@@ -24,6 +24,9 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+### __WORK IN PROGRESS__
+* (Apollon77) Prevented crash case reported by Sentry
+
 ### 3.0.0 (2023-11-25)
 * IMPORTANT: Node.js 16.x or higher is required
 
