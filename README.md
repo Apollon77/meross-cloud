@@ -24,8 +24,12 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+
+### __WORK IN PROGRESS__
+* (Apollon77) Enhance some error messages
+
 ### 3.1.1 (2023-12-30)
-* (Apollon77) Fix crash case
+* (Apollon77) Fix crash case_
 
 ### 3.1.0 (2023-12-30)
 * (Apollon77/bwp91) Adjust Signin API and add support for MFA
