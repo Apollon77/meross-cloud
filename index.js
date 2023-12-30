@@ -65,6 +65,7 @@ class MerossCloud extends EventEmitter {
 
         this.mqttConnections = {};
         this.devices = {};
+        this.httpRequestCounter = 0;
 
         if (this.options.tokenData) {
             const expectedHash = crypto.createHash('md5').update(`${this.domain}${this.options.email}${this.options.password}`).digest("hex");
@@ -126,11 +127,12 @@ class MerossCloud extends EventEmitter {
             form: payload,
             timeout: this.timeout
         };
-        this.options.logger &&  this.options.logger(`HTTP-Call: ${JSON.stringify(options)}`);
+        const requestCounter = this.httpRequestCounter++;
+        this.options.logger &&  this.options.logger(`HTTP-Call (${requestCounter}): ${JSON.stringify(options)}`);
         // Perform the request.
         request(options, (error, response, body) => {
             if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger(`HTTP-Response OK: ${body}`);
+                this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) OK: ${body}`);
                 try {
                     body = JSON.parse(body);
                 }
@@ -150,7 +152,7 @@ class MerossCloud extends EventEmitter {
                 }
                 return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
             }
-            this.options.logger && this.options.logger(`HTTP-Response Error: ${error} / Status=${response ? response.statusCode : '--'}`);
+            this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) Error: ${error} / Status=${response ? response.statusCode : '--'}`);
             return callback && callback(error);
         });
     }
