@@ -53,9 +53,18 @@ declare module 'meross-cloud' {
         }
     }
 
+    export interface TokenData {
+        token: string;
+        key: string;
+        userId: string;
+        hash: string;
+    }
+
     export interface CloudOptions {
         email: string;
         password: string;
+        mfaCode?: string;
+        tokenData?: TokenData;
         logger?: Function;
         localHttpFirst?: boolean,
         onlyLocalForGet?: boolean,
@@ -96,6 +105,7 @@ declare module 'meross-cloud' {
         logout(callback: Callback<number>): void
         disconnectAll(force: boolean): void
         getDevice(uuid: string): MerossCloudDevice
+        getTokenData(): TokenData
     }
 
     export class MerossCloudDevice extends EventEmitter {

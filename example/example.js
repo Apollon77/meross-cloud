@@ -10,6 +10,8 @@ const MerossCloud = require('../index.js');
 const options = {
     email: 'email',
     password: 'password',
+    // mfsCode: '123456', // optional
+    // tokenData: {...}, // Old Tokens - get after connect via "getTokenData()
     logger: console.log,
     localHttpFirst: true, // Try to contact the devices locally before trying the cloud
     onlyLocalForGet: true, // When trying locally, do not try the cloud for GET requests at all
