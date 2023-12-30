@@ -13,11 +13,12 @@ const { v4: uuidv4 } = require('uuid');
 const { getErrorMessage } = require('./lib/errorcodes');
 
 const SECRET = '23x17ahWarFH6w29';
-const MEROSS_URL = 'https://iotx.meross.com';
-const LOGIN_URL = `${MEROSS_URL}/v1/Auth/signIn`;
-const LOGOUT_URL = `${MEROSS_URL}/v1/Profile/logout`;
-const DEV_LIST = `${MEROSS_URL}/v1/Device/devList`;
-const SUBDEV_LIST = `${MEROSS_URL}/v1/Hub/getSubDevices`;
+const MEROSS_DOMAIN = 'iotx.meross.com';
+const MEROSS_MQTT_DOMAIN = "eu-iotx.meross.com";
+const LOGIN_URL = `/v1/Auth/signIn`;
+const LOGOUT_URL = `/v1/Profile/logout`;
+const DEV_LIST = `/v1/Device/devList`;
+const SUBDEV_LIST = `/v1/Hub/getSubDevices`;
 
 function generateRandomString(length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -54,6 +55,8 @@ class MerossCloud extends EventEmitter {
         this.userId = null;
         this.userEmail = null;
         this.authenticated = false;
+        this.domain = MEROSS_DOMAIN;
+        this.mqttDomain = MEROSS_MQTT_DOMAIN;
 
         this.localHttpFirst = !!options.localHttpFirst;
         this.onlyLocalForGet = this.localHttpFirst ? !!options.onlyLocalForGet : false;
@@ -62,19 +65,37 @@ class MerossCloud extends EventEmitter {
 
         this.mqttConnections = {};
         this.devices = {};
+
+        if (this.options.tokenData) {
+            const expectedHash = crypto.createHash('md5').update(`${this.domain}${this.options.email}${this.options.password}`).digest("hex");
+            if (this.options.tokenData.hash === expectedHash) {
+                this.options.logger && this.options.logger(`Trying pre-existing token from former login`);
+                this.token = this.options.tokenData.token;
+                this.key = this.options.tokenData.key;
+                this.userId = this.options.tokenData.userId;
+                this.userEmail = this.options.tokenData.userEmail;
+                this.domain = this.options.tokenData.domain;
+                this.mqttDomain = this.options.tokenData.mqttDomain;
+            } else {
+                this.options.logger && this.options.logger(`Can not reuse former token because email/password are different!`);
+            }
+        }
     }
 
     getTokenData() {
+        if (!this.authenticated) return null;
         return {
             token: this.token,
             key: this.key,
             userId: this.userId,
             userEmail: this.userEmail,
-            hash: crypto.createHash('md5').update(`${this.options.email}${this.options.password}`).digest("hex")
+            domain: this.domain,
+            mqttDomain: this.mqttDomain,
+            hash: crypto.createHash('md5').update(`${this.domain}${this.options.email}${this.options.password}`).digest("hex")
         };
     }
 
-    authenticatedPost(url, paramsData, callback) {
+    authenticatedPost(endpoint, paramsData, callback) {
         const nonce = generateRandomString(16);
         const timestampMillis = Date.now();
         const loginParams = encodeParams(paramsData);
@@ -99,7 +120,7 @@ class MerossCloud extends EventEmitter {
         };
 
         const options = {
-            url: url,
+            url: `https://${this.domain}${endpoint}`,
             method: 'POST',
             headers: headers,
             form: payload,
@@ -119,6 +140,13 @@ class MerossCloud extends EventEmitter {
 
                 if (body.apiStatus === 0) {
                     return callback && callback(null, body.data);
+                } else if (body.apiStatus === 1030 && body.data.domain) {
+                    this.domain = body.data.domain;
+                    if (this.domain.startsWith('https://')) {
+                        this.domain = this.domain.substring(8);
+                    }
+                    this.mqttDomain = body.data.mqttDomain;
+                    return this.authenticatedPost(endpoint, paramsData, callback);
                 }
                 return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
             }
@@ -166,10 +194,12 @@ class MerossCloud extends EventEmitter {
         //'0b11b194f83724b614a6975b112f63cee2f098-8125-40c7-a280-5115913d9887';// '%030x' % random.randrange(16 ** 30) + str(uuid.uuid4())
         // 54dp8pv70pz0a94ye8c1q5j13nhtb55dc30135-0cd6-4801-bc13-8608120b05d6
         // aa965f72dc01d414d8efa8360bade3  36894452-c55b-4f10-8ca3-c60edba97728
+        const passwordHash = crypto.createHash('md5').update(this.options.password).digest("hex");
+
         const data = {
             email: this.options.email,
-            password: this.options.password,
-            encryption: 0,
+            password: passwordHash,
+            encryption: 1,
             accountCountryCode: '--',
             mobileInfo: {
                 resolution: '--',
@@ -239,18 +269,6 @@ class MerossCloud extends EventEmitter {
     }
 
     connect(callback) {
-        if (!this.authenticated && this.options.tokenData) {
-            const expectedHash = crypto.createHash('md5').update(`${this.options.email}${this.options.password}`).digest("hex");
-            if (this.options.tokenData.hash === expectedHash) {
-                this.options.logger && this.options.logger(`Trying pre-existing token from former login`);
-                this.token = this.options.tokenData.token;
-                this.key = this.options.tokenData.key;
-                this.userId = this.options.tokenData.userId;
-                this.userEmail = this.options.tokenData.userEmail;
-            } else {
-                this.options.logger && this.options.logger(`Can not reuse former token because email/password are different!`);
-            }
-        }
         if (this.authenticated || this.token) {
             this.getDevices((err, deviceListLength) => {
                 if (err && err.message.includes('Token')) {
@@ -314,7 +332,7 @@ class MerossCloud extends EventEmitter {
     }
 
     initMqtt(dev) {
-        const domain = dev.domain || "eu-iotx.meross.com"; // reservedDomain ???
+        const domain = dev.domain || this.mqttDomain; // reservedDomain ???
         if (!this.mqttConnections[domain] || !this.mqttConnections[domain].client) {
             const appId = crypto.createHash('md5').update(`API${uuidv4()}`).digest("hex");
             const clientId = `app:${appId}`;

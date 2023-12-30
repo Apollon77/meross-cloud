@@ -58,6 +58,8 @@ declare module 'meross-cloud' {
         key: string;
         userId: string;
         hash: string;
+        domain: string;
+        mqttDomain: string;
     }
 
     export interface CloudOptions {
