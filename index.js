@@ -55,7 +55,7 @@ class MerossCloud extends EventEmitter {
         this.userId = null;
         this.userEmail = null;
         this.authenticated = false;
-        this.domain = MEROSS_DOMAIN;
+        this.httpDomain = MEROSS_DOMAIN;
         this.mqttDomain = MEROSS_MQTT_DOMAIN;
 
         this.localHttpFirst = !!options.localHttpFirst;
@@ -68,14 +68,14 @@ class MerossCloud extends EventEmitter {
         this.httpRequestCounter = 0;
 
         if (this.options.tokenData) {
-            const expectedHash = crypto.createHash('md5').update(`${this.domain}${this.options.email}${this.options.password}`).digest("hex");
+            const expectedHash = crypto.createHash('md5').update(`${this.httpDomain}${this.options.email}${this.options.password}`).digest("hex");
             if (this.options.tokenData.hash === expectedHash) {
                 this.options.logger && this.options.logger(`Trying pre-existing token from former login`);
                 this.token = this.options.tokenData.token;
                 this.key = this.options.tokenData.key;
                 this.userId = this.options.tokenData.userId;
                 this.userEmail = this.options.tokenData.userEmail;
-                this.domain = this.options.tokenData.domain;
+                this.httpDomain = this.options.tokenData.domain;
                 this.mqttDomain = this.options.tokenData.mqttDomain;
             } else {
                 this.options.logger && this.options.logger(`Can not reuse former token because email/password are different!`);
@@ -90,9 +90,9 @@ class MerossCloud extends EventEmitter {
             key: this.key,
             userId: this.userId,
             userEmail: this.userEmail,
-            domain: this.domain,
+            domain: this.httpDomain,
             mqttDomain: this.mqttDomain,
-            hash: crypto.createHash('md5').update(`${this.domain}${this.options.email}${this.options.password}`).digest("hex")
+            hash: crypto.createHash('md5').update(`${this.httpDomain}${this.options.email}${this.options.password}`).digest("hex")
         };
     }
 
@@ -121,7 +121,7 @@ class MerossCloud extends EventEmitter {
         };
 
         const options = {
-            url: `https://${this.domain}${endpoint}`,
+            url: `https://${this.httpDomain}${endpoint}`,
             method: 'POST',
             headers: headers,
             form: payload,
@@ -143,9 +143,9 @@ class MerossCloud extends EventEmitter {
                 if (body.apiStatus === 0) {
                     return callback && callback(null, body.data);
                 } else if (body.apiStatus === 1030 && body.data.domain) {
-                    this.domain = body.data.domain;
-                    if (this.domain.startsWith('https://')) {
-                        this.domain = this.domain.substring(8);
+                    this.httpDomain = body.data.domain;
+                    if (this.httpDomain.startsWith('https://')) {
+                        this.httpDomain = this.httpDomain.substring(8);
                     }
                     this.mqttDomain = body.data.mqttDomain;
                     return this.authenticatedPost(endpoint, paramsData, callback);
