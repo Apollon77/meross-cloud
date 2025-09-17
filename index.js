@@ -7,7 +7,6 @@
 
 const mqtt = require('mqtt');
 const crypto = require('crypto');
-const request = require('request');
 const EventEmitter = require('events');
 const { v4: uuidv4 } = require('uuid');
 const { getErrorMessage } = require('./lib/errorcodes');
@@ -32,6 +31,59 @@ function generateRandomString(length) {
 function encodeParams(parameters) {
     const jsonstring = JSON.stringify(parameters);
     return Buffer.from(jsonstring).toString('base64');
+}
+
+function createFormData(payload) {
+    const formData = new URLSearchParams();
+    for (const [key, value] of Object.entries(payload)) {
+        formData.append(key, value);
+    }
+    return formData;
+}
+
+function performFetchRequest(url, options, timeout, logger, logPrefix, callback) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    const fetchOptions = {
+        method: options.method || 'POST',
+        headers: options.headers || {},
+        signal: controller.signal
+    };
+    
+    if (options.body) {
+        fetchOptions.body = options.body;
+    }
+    
+    fetch(url, fetchOptions)
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (response.status === 200) {
+            const responsePromise = options.parseAs === 'json' ? response.json() : response.text();
+            return responsePromise.then(body => {
+                logger && logger(`${logPrefix} OK: ${typeof body === 'string' ? body : JSON.stringify(body)}`);
+                return { success: true, body: body };
+            });
+        } else {
+            logger && logger(`${logPrefix} Error: Status=${response.status}`);
+            return { success: false, error: new Error(`HTTP ${response.status}: ${response.statusText}`) };
+        }
+    })
+    .then(result => {
+        if (result.success) {
+            callback(null, result.body);
+        } else {
+            callback(result.error);
+        }
+    })
+    .catch(error => {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            error = new Error('Request timeout');
+        }
+        logger && logger(`${logPrefix} Error: ${error} / Status=--`);
+        callback(error);
+    });
 }
 
 
@@ -120,40 +172,48 @@ class MerossCloud extends EventEmitter {
             'nonce': nonce
         };
 
+        const formData = createFormData(payload);
+        const url = `https://${this.httpDomain}${endpoint}`;
+        
         const options = {
-            url: `https://${this.httpDomain}${endpoint}`,
+            url: url,
             method: 'POST',
             headers: headers,
             form: payload,
             timeout: this.timeout
         };
+        
         const requestCounter = this.httpRequestCounter++;
         this.options.logger &&  this.options.logger(`HTTP-Call (${requestCounter}): ${JSON.stringify(options)}`);
-        // Perform the request.
-        request(options, (error, response, body) => {
-            if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) OK: ${body}`);
-                try {
-                    body = JSON.parse(body);
-                }
-                catch (err) {
-                    body = {};
-                }
-
-                if (body.apiStatus === 0) {
-                    return callback && callback(null, body.data);
-                } else if (body.apiStatus === 1030 && body.data.domain) {
-                    this.httpDomain = body.data.domain;
-                    if (this.httpDomain.startsWith('https://')) {
-                        this.httpDomain = this.httpDomain.substring(8);
-                    }
-                    this.mqttDomain = body.data.mqttDomain;
-                    return this.authenticatedPost(endpoint, paramsData, callback);
-                }
-                return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
+        
+        performFetchRequest(url, {
+            method: 'POST',
+            headers: headers,
+            body: formData,
+            parseAs: 'text'
+        }, this.timeout, this.options.logger, `HTTP-Response (${requestCounter})`, (error, body) => {
+            if (error) {
+                return callback && callback(error);
             }
-            this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) Error: ${error} / Status=${response ? response.statusCode : '--'}`);
-            return callback && callback(error);
+            
+            try {
+                body = JSON.parse(body);
+            }
+            catch (err) {
+                body = {};
+            }
+
+            if (body.apiStatus === 0) {
+                return callback && callback(null, body.data);
+            } else if (body.apiStatus === 1030 && body.data.domain) {
+                this.httpDomain = body.data.domain;
+                if (this.httpDomain.startsWith('https://')) {
+                    this.httpDomain = this.httpDomain.substring(8);
+                }
+                this.mqttDomain = body.data.mqttDomain;
+                return this.authenticatedPost(endpoint, paramsData, callback);
+            }
+            return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
         });
     }
 
@@ -209,10 +269,10 @@ class MerossCloud extends EventEmitter {
                 deviceModel: '--',
                 mobileOs: process.platform,
                 mobileOSVersion: '--',
-                uuid: logIdentifier,
+                uuid: logIdentifier
             },
             agree: 1,
-            mfaCode: this.options.mfaCode || undefined,
+            mfaCode: this.options.mfaCode || undefined
         };
         //console.log(JSON.stringify(data));
 
@@ -465,27 +525,34 @@ class MerossCloud extends EventEmitter {
     }
 
     sendMessageHttp(dev, ip, payload, callback) {
+        const url = `http://${ip}/config`;
         const options = {
-            url: `http://${ip}/config`,
+            url: url,
             method: 'POST',
             json: payload,
             timeout: this.timeout
         };
         this.options.logger &&  this.options.logger(`HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`);
-        // Perform the request.
-        request(options, (error, response, body) => {
-            if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger(`HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(body)}`);
-                if (body) {
-                    setImmediate(() => {
-                        this.devices[dev.uuid].handleMessage(body);
-                    })
-                    return callback && callback(null);
-                }
-                return callback && callback(new Error(`${body.apiStatus}: ${body.info}`));
+        
+        performFetchRequest(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            parseAs: 'json'
+        }, this.timeout, this.options.logger, `HTTP-Local-Response ${dev.uuid}`, (error, body) => {
+            if (error) {
+                return callback && callback(error);
             }
-            this.options.logger && this.options.logger(`HTTP-Local-Response Error ${dev.uuid}: ${error} / Status=${response ? response.statusCode : '--'}`);
-            return callback && callback(error);
+            
+            if (body) {
+                setImmediate(() => {
+                    this.devices[dev.uuid].handleMessage(body);
+                })
+                return callback && callback(null);
+            }
+            return callback && callback(new Error(`${body.apiStatus}: ${body.info}`));
         });
     }
 

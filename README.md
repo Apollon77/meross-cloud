@@ -24,6 +24,10 @@ see example folder
 The library is partially based on the Python project https://github.com/albertogeniola/MerossIot, Thank you for this great basic work on how to connect to the Meross Cloud Servers
 
 ## Changelog
+### __WORK IN PROGRESS__
+* (Apollon77) BREAKING: Node.js 18.x or higher is required
+* (Apollon77) Replace deprecated request library with native fetch
+
 ### 3.1.2 (2023-12-30)
 * (Apollon77) Enhance some error messages
 
