@@ -7,7 +7,6 @@
 
 const mqtt = require('mqtt');
 const crypto = require('crypto');
-const request = require('request');
 const EventEmitter = require('events');
 const { v4: uuidv4 } = require('uuid');
 const { getErrorMessage } = require('./lib/errorcodes');
@@ -32,6 +31,14 @@ function generateRandomString(length) {
 function encodeParams(parameters) {
     const jsonstring = JSON.stringify(parameters);
     return Buffer.from(jsonstring).toString('base64');
+}
+
+function createFormData(payload) {
+    const formData = new URLSearchParams();
+    for (const [key, value] of Object.entries(payload)) {
+        formData.append(key, value);
+    }
+    return formData;
 }
 
 
@@ -120,39 +127,66 @@ class MerossCloud extends EventEmitter {
             'nonce': nonce
         };
 
+        const formData = createFormData(payload);
+        const url = `https://${this.httpDomain}${endpoint}`;
+        
         const options = {
-            url: `https://${this.httpDomain}${endpoint}`,
+            url: url,
             method: 'POST',
             headers: headers,
             form: payload,
             timeout: this.timeout
         };
+        
         const requestCounter = this.httpRequestCounter++;
         this.options.logger &&  this.options.logger(`HTTP-Call (${requestCounter}): ${JSON.stringify(options)}`);
-        // Perform the request.
-        request(options, (error, response, body) => {
-            if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) OK: ${body}`);
-                try {
-                    body = JSON.parse(body);
-                }
-                catch (err) {
-                    body = {};
-                }
-
-                if (body.apiStatus === 0) {
-                    return callback && callback(null, body.data);
-                } else if (body.apiStatus === 1030 && body.data.domain) {
-                    this.httpDomain = body.data.domain;
-                    if (this.httpDomain.startsWith('https://')) {
-                        this.httpDomain = this.httpDomain.substring(8);
+        
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+        
+        // Perform the request using fetch
+        fetch(url, {
+            method: 'POST',
+            headers: headers,
+            body: formData,
+            signal: controller.signal
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            if (response.status === 200) {
+                return response.text().then(body => {
+                    this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) OK: ${body}`);
+                    try {
+                        body = JSON.parse(body);
                     }
-                    this.mqttDomain = body.data.mqttDomain;
-                    return this.authenticatedPost(endpoint, paramsData, callback);
-                }
-                return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
+                    catch (err) {
+                        body = {};
+                    }
+
+                    if (body.apiStatus === 0) {
+                        return callback && callback(null, body.data);
+                    } else if (body.apiStatus === 1030 && body.data.domain) {
+                        this.httpDomain = body.data.domain;
+                        if (this.httpDomain.startsWith('https://')) {
+                            this.httpDomain = this.httpDomain.substring(8);
+                        }
+                        this.mqttDomain = body.data.mqttDomain;
+                        return this.authenticatedPost(endpoint, paramsData, callback);
+                    }
+                    return callback && callback(new Error(`${body.apiStatus} (${getErrorMessage(body.apiStatus)})${body.info ? ` - ${body.info}` : ''}`));
+                });
+            } else {
+                this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) Error: Status=${response.status}`);
+                return callback && callback(new Error(`HTTP ${response.status}: ${response.statusText}`));
             }
-            this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) Error: ${error} / Status=${response ? response.statusCode : '--'}`);
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                error = new Error('Request timeout');
+            }
+            this.options.logger && this.options.logger(`HTTP-Response (${requestCounter}) Error: ${error} / Status=--`);
             return callback && callback(error);
         });
     }
@@ -209,10 +243,10 @@ class MerossCloud extends EventEmitter {
                 deviceModel: '--',
                 mobileOs: process.platform,
                 mobileOSVersion: '--',
-                uuid: logIdentifier,
+                uuid: logIdentifier
             },
             agree: 1,
-            mfaCode: this.options.mfaCode || undefined,
+            mfaCode: this.options.mfaCode || undefined
         };
         //console.log(JSON.stringify(data));
 
@@ -465,26 +499,52 @@ class MerossCloud extends EventEmitter {
     }
 
     sendMessageHttp(dev, ip, payload, callback) {
+        const url = `http://${ip}/config`;
         const options = {
-            url: `http://${ip}/config`,
+            url: url,
             method: 'POST',
             json: payload,
             timeout: this.timeout
         };
         this.options.logger &&  this.options.logger(`HTTP-Local-Call ${dev.uuid}: ${JSON.stringify(options)}`);
-        // Perform the request.
-        request(options, (error, response, body) => {
-            if (!error && response && response.statusCode === 200 && body) {
-                this.options.logger && this.options.logger(`HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(body)}`);
-                if (body) {
-                    setImmediate(() => {
-                        this.devices[dev.uuid].handleMessage(body);
-                    })
-                    return callback && callback(null);
-                }
-                return callback && callback(new Error(`${body.apiStatus}: ${body.info}`));
+        
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+        
+        // Perform the request using fetch
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        })
+        .then(response => {
+            clearTimeout(timeoutId);
+            if (response.status === 200) {
+                return response.json().then(body => {
+                    this.options.logger && this.options.logger(`HTTP-Local-Response OK ${dev.uuid}: ${JSON.stringify(body)}`);
+                    if (body) {
+                        setImmediate(() => {
+                            this.devices[dev.uuid].handleMessage(body);
+                        })
+                        return callback && callback(null);
+                    }
+                    return callback && callback(new Error(`${body.apiStatus}: ${body.info}`));
+                });
+            } else {
+                this.options.logger && this.options.logger(`HTTP-Local-Response Error ${dev.uuid}: HTTP ${response.status} / Status=${response.status}`);
+                return callback && callback(new Error(`HTTP ${response.status}: ${response.statusText}`));
             }
-            this.options.logger && this.options.logger(`HTTP-Local-Response Error ${dev.uuid}: ${error} / Status=${response ? response.statusCode : '--'}`);
+        })
+        .catch(error => {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                error = new Error('Request timeout');
+            }
+            this.options.logger && this.options.logger(`HTTP-Local-Response Error ${dev.uuid}: ${error} / Status=--`);
             return callback && callback(error);
         });
     }

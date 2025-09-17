@@ -15,11 +15,10 @@
     "url": "https://github.com/Apollon77/meross-cloud"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "dependencies": {
     "mqtt": "^5.14.1",
-    "request": "^2.88.2",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
